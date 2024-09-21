@@ -4,8 +4,6 @@
 name: Suggest README updates
 
 on:
-  push:
-    branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
 
