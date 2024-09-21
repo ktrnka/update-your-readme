@@ -7,6 +7,9 @@ name = "pypi"
 PyGithub = "*"
 requests = "*"
 python-dotenv = "*"
+langchain = "*"
+langchain-anthropic = "*"
+pydantic = "*"
 
 [dev-packages]
 pytest = "*"
