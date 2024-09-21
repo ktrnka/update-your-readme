@@ -8,6 +8,7 @@ This project automatically updates README files based on changes in pull request
 - Suggests README updates based on new dependencies and project structure
 - Uses LangChain and Anthropic's Claude model for intelligent suggestions
 - Command-line functionality for easy integration
+- Provides informative logging output about update actions
 
 ## Prerequisites
 
@@ -45,6 +46,8 @@ Replace:
 - `<owner>/<repo>` with the GitHub repository name
 - `<pr_number>` with the pull request number you want to analyze
 - `<path_to_readme>` with the path to your README file (e.g., README.md)
+
+The script will now provide informative output about its actions, including whether it's updating the README and the reason for the update.
 
 ## Project Structure
 
