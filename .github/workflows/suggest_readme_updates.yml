@@ -55,5 +55,6 @@ jobs:
         if: steps.cpr.outputs.pull-request-url != ''
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
           body: |
             Suggested README changes in PR ${{ steps.cpr.outputs.pull-request-url }}
