@@ -132,6 +132,7 @@ def review_pull_request(repo: Repository, pr_number: int) -> UpdateRecommendatio
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--repository", "-r", type=str, help="Repository name")
+    parser.add_argument("--readme", type=str, help="README file")
     parser.add_argument("--pr", type=int, help="Pull request number")
 
     args = parser.parse_args()
@@ -140,4 +141,5 @@ if __name__ == "__main__":
     result = review_pull_request(repo, args.pr)
 
     if result.should_update:
-        print(result.updated_readme)
+        with open(args.readme, "w") as f:
+            f.write(result.updated_readme)
