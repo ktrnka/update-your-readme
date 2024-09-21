@@ -39,12 +39,13 @@ model = ChatAnthropic(model='claude-3-5-sonnet-20240620')
 class UpdateRecommendation(BaseModel):
     should_update: bool
     reason: Optional[str]
-    patch: Optional[str]
+    updated_readme: Optional[str]
 
 
-# Generate the LangChain Claude prompt
 prompt = PromptTemplate.from_template("""
-# README Content
+You'll review a pull request and determine if the README should be updated, then suggest appropriate changes.
+                                      
+# Existing README Content
 {readme_content}
 
 # File Tree
@@ -57,13 +58,19 @@ prompt = PromptTemplate.from_template("""
 Based on the above information, please provide a structured output indicating:
 A) Should the README be updated?
 B) Why?
-C) A patch of the update to make.
+C) The updated README content (if applicable)
+                                      
+# Good content in READMEs
+- Clear, concise, and informative
+- Describes the project and its purpose
+- Installation or setup instructions, including any environment variables
+
 """)
 pipeline = prompt | model.with_structured_output(UpdateRecommendation)
 
 def review_pull_request(repo, pr_number) -> UpdateRecommendation:
     pr = repo.get_pull(pr_number)
-    
+
     result = pipeline.invoke({
         "readme_content": repo.get_contents("README.md").decoded_content.decode(),
         "file_tree": repo_contents_to_markdown(repo),
