@@ -141,5 +141,8 @@ if __name__ == "__main__":
     result = review_pull_request(repo, args.pr)
 
     if result.should_update:
+        print(f"Updating README with suggested changes: {result.reason}")
         with open(args.readme, "w") as f:
             f.write(result.updated_readme)
+    else:
+        print(f"No updates suggested: {result.reason}")
