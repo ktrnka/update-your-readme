@@ -8,6 +8,7 @@ This project automatically updates README files based on changes in pull request
 - Suggests README updates based on new dependencies and project structure
 - Uses LangChain and Anthropic's Claude model for intelligent suggestions
 - Command-line functionality for easy integration
+- GitHub Actions workflow for automatic README update suggestions
 
 ## Prerequisites
 
@@ -59,14 +60,6 @@ Replace `&lt;owner&gt;/&lt;repo&gt;` with the GitHub repository name and `&lt;pr
 └── README.md
 ```
 
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-[MIT License](https://opensource.org/licenses/MIT)
-
 ## GitHub Actions Integration
 
 This project includes a GitHub Actions workflow that automatically suggests README updates for pull requests. The workflow is defined in `.github/workflows/suggest_readme_updates.yml` and performs the following steps:
@@ -79,3 +72,11 @@ This project includes a GitHub Actions workflow that automatically suggests READ
 6. Adds a comment to the original pull request with a link to the suggested changes
 
 To use this feature, ensure that your repository has the necessary secrets set up (`GITHUB_TOKEN` and `ANTHROPIC_API_KEY`).
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+[MIT License](https://opensource.org/licenses/MIT)
