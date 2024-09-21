@@ -65,5 +65,5 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-[Add license information here]
+[MIT License](https://opensource.org/licenses/MIT)
 
