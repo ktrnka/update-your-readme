@@ -9,6 +9,7 @@ This project automatically updates README files based on changes in pull request
 - Uses LangChain and Anthropic's Claude model for intelligent suggestions
 - Command-line functionality for easy integration
 - Provides informative logging output about update actions
+- GitHub Actions integration for automated README update suggestions
 
 ## Prerequisites
 
@@ -39,13 +40,13 @@ This project automatically updates README files based on changes in pull request
 Run the script with the following command:
 
 ```
-pipenv run python src/core.py --repository <owner>/<repo> --pr <pr_number> --readme <path_to_readme>
+pipenv run python src/core.py --repository &lt;owner&gt;/&lt;repo&gt; --pr &lt;pr_number&gt; --readme &lt;path_to_readme&gt;
 ```
 
 Replace:
-- `<owner>/<repo>` with the GitHub repository name
-- `<pr_number>` with the pull request number you want to analyze
-- `<path_to_readme>` with the path to your README file (e.g., README.md)
+- `&lt;owner&gt;/&lt;repo&gt;` with the GitHub repository name
+- `&lt;pr_number&gt;` with the pull request number you want to analyze
+- `&lt;path_to_readme&gt;` with the path to your README file (e.g., README.md)
 
 The script will now provide informative output about its actions, including whether it's updating the README and the reason for the update.
 
@@ -82,6 +83,8 @@ This project includes a GitHub Actions workflow that automatically suggests READ
 3. Installs dependencies
 4. Runs the README update script with the specified README file
 5. Creates a new pull request with the suggested changes
-6. Adds a comment to the original pull request with a link to the suggested changes
+6. Adds a comment to the original pull request with a link to the suggested changes, but only if a new pull request was created
 
 To use this feature, ensure that your repository has the necessary secrets set up (`GITHUB_TOKEN` and `ANTHROPIC_API_KEY`).
+
+Note: The workflow now includes a conditional check to only create a comment on the original pull request if a new pull request with suggested changes was actually created. This helps avoid unnecessary notifications when no changes are needed.
