@@ -23,6 +23,9 @@ jobs:
           pip install pipenv
           pipenv install
       - name: Update README
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: pipenv run python src/core.py --repository ${GITHUB_REPOSITORY} --pr ${{ github.event.pull_request.number }} > README.md
       - name: Extract branch name
         shell: bash
