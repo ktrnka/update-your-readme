@@ -52,8 +52,8 @@ jobs:
           reviewers: ${{ steps.pr-author.outputs.author }}
       - name: Create comment
         uses: peter-evans/create-or-update-comment@v4
+        if: steps.cpr.outputs.pull-request-url != ''
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          if: steps.cpr.outputs.pull-request-url != ''
           body: |
             Suggested README changes in PR ${{ steps.cpr.outputs.pull-request-url }}
