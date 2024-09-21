@@ -1,5 +1,4 @@
-from github import Github
-from github import Auth
+from github import Github, Auth, Repository, PullRequest
 import os
 from dotenv import load_dotenv
 from pydantic import BaseModel
@@ -12,13 +11,13 @@ load_dotenv()
 
 github_client = Github(auth=Auth.Token(os.environ['GITHUB_TOKEN']))
 
-def repo_contents_to_markdown(repo):
+def repo_contents_to_markdown(repo: Repository) -> str:
     markdown = ""
     for content in repo.get_contents(""):
         markdown += f"{content.path}\n"
     return markdown
 
-def pull_request_to_markdown(pr):
+def pull_request_to_markdown(pr: PullRequest) -> str:
     text = f"""
 # [{pr.title}]){pr.html_url}
 {pr.body or 'No description provided.'}
@@ -34,12 +33,10 @@ def pull_request_to_markdown(pr):
 
 model = ChatAnthropic(model='claude-3-5-sonnet-20240620')
 
-
-
 class UpdateRecommendation(BaseModel):
     should_update: bool
-    reason: Optional[str]
-    updated_readme: Optional[str]
+    reason: str
+    updated_readme: str
 
 # Copied from https://www.hatica.io/blog/best-practices-for-github-readme/
 readme_guidelines = """
@@ -113,8 +110,10 @@ Write using clear and concise language to ensure that your README is easily unde
 
 prompt = PromptTemplate.from_template("""
 You'll review a pull request and determine if the README should be updated, then suggest appropriate changes.
-                                      
-# Existing README Content
+
+{readme_guidelines}
+
+# Existing README
 {readme_content}
 
 # File Tree
@@ -128,12 +127,10 @@ Based on the above information, please provide a structured output indicating:
 A) Should the README be updated?
 B) Why?
 C) The updated README content (if applicable)
-                                      
-{readme_guidelines}
-""")
+                                      """)
 pipeline = prompt | model.with_structured_output(UpdateRecommendation)
 
-def review_pull_request(repo, pr_number) -> UpdateRecommendation:
+def review_pull_request(repo: Repository, pr_number: int) -> UpdateRecommendation:
     pr = repo.get_pull(pr_number)
 
     result = pipeline.invoke({
