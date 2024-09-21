@@ -29,6 +29,11 @@ jobs:
       shell: bash
       run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
       id: extract_branch
+    - name: Get PR author
+      id: pr-author
+      run: |
+        PR_AUTHOR=$(jq -r '.pull_request.user.login' "$GITHUB_EVENT_PATH")
+        echo "author=$PR_AUTHOR" >> $GITHUB_OUTPUT
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v7
       with:
@@ -42,4 +47,5 @@ jobs:
         branch: update-your-readme
         branch-suffix: timestamp
         base: ${{ steps.extract_branch.outputs.branch }}
+        reviewers: ${{ steps.pr-author.outputs.author }}
 
