@@ -7,9 +7,6 @@ on:
   pull_request:
     branches: [ "main" ]
 
-permissions:
-  contents: read
-
 jobs:
   build:
 
@@ -28,8 +25,18 @@ jobs:
         pipenv install
     - name: Update README
       run: echo "This is a suggestion for the README" > README.md
+    - name: Extract branch name
+      shell: bash
+      run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+      id: extract_branch
+    - name: Get PR author
+      id: pr-author
+      run: |
+        PR_AUTHOR=$(jq -r '.pull_request.user.login' "$GITHUB_EVENT_PATH")
+        echo "author=$PR_AUTHOR" >> $GITHUB_OUTPUT
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v7
+      id: cpr
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         commit-message: Updated README
@@ -40,4 +47,13 @@ jobs:
         labels: feature, automated pr
         branch: update-your-readme
         branch-suffix: timestamp
+        base: ${{ steps.extract_branch.outputs.branch }}
+        reviewers: ${{ steps.pr-author.outputs.author }}
+    - name: Create comment
+      uses: peter-evans/create-or-update-comment@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        issue-number: ${{ github.event.pull_request.number }}
+        body: |
+          Suggested README changes in ${{ steps.cpr.outputs.pull-request-url }}
 
