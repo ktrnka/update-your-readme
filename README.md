@@ -67,3 +67,15 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 [MIT License](https://opensource.org/licenses/MIT)
 
+## GitHub Actions Integration
+
+This project includes a GitHub Actions workflow that automatically suggests README updates for pull requests. The workflow is defined in `.github/workflows/suggest_readme_updates.yml` and performs the following steps:
+
+1. Checks out the repository
+2. Sets up Python
+3. Installs dependencies
+4. Runs the README update script
+5. Creates a new pull request with the suggested changes
+6. Adds a comment to the original pull request with a link to the suggested changes
+
+To use this feature, ensure that your repository has the necessary secrets set up (`GITHUB_TOKEN` and `ANTHROPIC_API_KEY`).
