@@ -42,14 +42,14 @@ class UpdateRecommendation(BaseModel):
 readme_guidelines = """
 # README Guidelines
 
-## Provide a Brief Overview of the Project
+Provide a Brief Overview of the Project
 Include a brief but informative description of your project's purpose, functionality, and goals. This helps users quickly grasp the value of your project and determine if it's relevant to their needs.
 Example: A user-friendly weather forecasting app that provides real-time data, daily forecasts, and weather alerts for locations worldwide.
 
-## Installation and Setup
+Installation and Setup
 List Prerequisites and System Requirements
 
-Clearly outline any prerequisites, such as software dependencies or system requirements, for your project. This helps users determine if they can use your project on their system and prepares them for the installation process.
+Clearly outline any prerequisites, such as software dependencies, system requirements, or environment variables, for your project. This helps users determine if they can use your project on their system and prepares them for the installation process.
 
 Example:
 
@@ -57,7 +57,7 @@ Example:
 ## Prerequisites
 - Node.js 14.x or higher
 - Python 3.8 or higher
-- Windows, macOS, or Linux operating system
+- Environment variables: OPENAI_API_KEY, ...
 ```
 
 Step-by-Step Instructions for Installation and Setup
@@ -66,8 +66,8 @@ Provide clear, step-by-step instructions for installing and setting up your proj
 
 Example:
 
-## Installation
 ```
+## Installation
 git clone https://github.com/username/WeatherForecastApp.git
 
 cd WeatherForecastApp
@@ -75,21 +75,6 @@ cd WeatherForecastApp
 npm install
 
 npm start
-```
-
-## Explain How to Use the Software
-
-Describe how users can interact with and use your project. This helps them understand the capabilities and limitations of your software.
-
-Example:
-```
-## Usage
-
-To use the WeatherForecastApp, follow these steps:
-
-1. Enter your location in the search bar.
-2. Select the desired date range for your forecast.
-3. Click "Get Forecast" to view the weather data.
 ```
 
 ## Use Markdown for Formatting
@@ -127,7 +112,8 @@ Based on the above information, please provide a structured output indicating:
 A) Should the README be updated?
 B) Why?
 C) The updated README content (if applicable)
-                                      """)
+""")
+
 pipeline = prompt | model.with_structured_output(UpdateRecommendation)
 
 def review_pull_request(repo: Repository, pr_number: int) -> UpdateRecommendation:
