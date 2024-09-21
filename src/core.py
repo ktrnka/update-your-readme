@@ -1,5 +1,6 @@
 from github import Github, Auth, Repository, PullRequest
 import os
+from argparse import ArgumentParser
 from dotenv import load_dotenv
 from pydantic import BaseModel
 from typing import Optional
@@ -126,3 +127,17 @@ def review_pull_request(repo: Repository, pr_number: int) -> UpdateRecommendatio
         "readme_guidelines": readme_guidelines
     })
     return result
+
+
+if __name__ == "__main__":
+    parser = ArgumentParser()
+    parser.add_argument("--repository", "-r", type=str, help="Repository name")
+    parser.add_argument("--pr", type=int, help="Pull request number")
+
+    args = parser.parse_args()
+
+    repo = github_client.get_repo(args.repository)
+    result = review_pull_request(repo, args.pr)
+
+    if result.should_update:
+        print(result.updated_readme)
