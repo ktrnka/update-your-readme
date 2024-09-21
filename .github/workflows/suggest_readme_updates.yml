@@ -28,6 +28,10 @@ jobs:
         pipenv install
     - name: Update README
       run: echo "This is a suggestion for the README" > README.md
+    - name: Extract branch name
+      shell: bash
+      run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+      id: extract_branch
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v7
       with:
@@ -40,4 +44,5 @@ jobs:
         labels: feature, automated pr
         branch: update-your-readme
         branch-suffix: timestamp
+        base: ${{ steps.extract_branch.outputs.branch }}
 
