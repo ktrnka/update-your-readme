@@ -38,13 +38,13 @@ This project automatically updates README files based on changes in pull request
 Run the script with the following command:
 
 ```
-pipenv run python src/core.py --repository &lt;owner&gt;/&lt;repo&gt; --pr &lt;pr_number&gt; --readme &lt;path_to_readme&gt;
+pipenv run python src/core.py --repository <owner>/<repo> --pr <pr_number> --readme <path_to_readme>
 ```
 
 Replace:
-- `&lt;owner&gt;/&lt;repo&gt;` with the GitHub repository name
-- `&lt;pr_number&gt;` with the pull request number you want to analyze
-- `&lt;path_to_readme&gt;` with the path to your README file (e.g., README.md)
+- `<owner>/<repo>` with the GitHub repository name
+- `<pr_number>` with the pull request number you want to analyze
+- `<path_to_readme>` with the path to your README file (e.g., README.md)
 
 ## Project Structure
 
