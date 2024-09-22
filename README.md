@@ -8,8 +8,7 @@ This project automatically updates README files based on changes in pull request
 - Suggests README updates based on new dependencies and project structure
 - Uses LangChain and Anthropic's Claude model for intelligent suggestions
 - Command-line functionality for easy integration
-- Provides informative logging output about update actions
-- Option to skip README checks for testing purposes
+- GitHub Actions integration for automated README updates
 - Automatically closes stale README PRs
 
 ## Prerequisites
@@ -50,11 +49,9 @@ Replace:
 - `<pr_number>` with the pull request number you want to analyze
 - `<path_to_readme>` with the path to your README file (e.g., README.md)
 
-The script will now provide informative output about its actions, including whether it's updating the README and the reason for the update.
-
 ### Skipping README Check
 
-To skip the README check for testing purposes, include "NO README REVIEW" in the pull request body. This will cause the script to exit without performing any updates.
+To skip the README check for testing purposes, include "NO README REVIEW" in the pull request body.
 
 ## Project Structure
 
@@ -62,43 +59,40 @@ To skip the README check for testing purposes, include "NO README REVIEW" in the
 .
 ├── .github
 │   └── workflows
-│       ├── suggest_readme_updates.yml
-│       └── close_stale_prs.yml
+│       ├── close_stale_prs.yml
+│       ├── readme_feedback.yml
+│       └── suggest_readme_updates.yml
 ├── src
 │   ├── core.py
-│   └── close_stale_prs.sh
+│   ├── close_stale_prs.sh
+│   ├── test_github.ipynb
+│   └── test_popular_repos.ipynb
 ├── .gitignore
 ├── NOTES.md
 ├── Pipfile
 ├── Pipfile.lock
-└── README.md
+├── README.md
+└── action.yml
 ```
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-[MIT License](https://opensource.org/licenses/MIT)
 
 ## GitHub Actions Integration
 
 This project includes GitHub Actions workflows that enhance the README update process:
 
 1. **Suggest README Updates**: Defined in `.github/workflows/suggest_readme_updates.yml`, this workflow:
-   - Checks out the repository
-   - Sets up Python
-   - Installs dependencies
-   - Runs the README update script with the specified README file
-   - Creates a new pull request with the suggested changes
+   - Runs on pull requests to the main branch
+   - Checks out the repository, sets up Python, and installs dependencies
+   - Runs the README update script
+   - Creates a new pull request with suggested changes
    - Adds a comment to the original pull request with a link to the suggested changes
 
 2. **Close Stale README PRs**: Defined in `.github/workflows/close_stale_prs.yml`, this workflow:
    - Triggers when a pull request is closed
    - Runs a shell script to identify and close any stale README update PRs associated with the closed PR
 
-To use these features, ensure that your repository has the necessary secrets set up (`GITHUB_TOKEN` and `ANTHROPIC_API_KEY`).
+3. **README Feedback**: Defined in `.github/workflows/readme_feedback.yml`, this workflow:
+   - Triggers on pull request review comments
+   - Processes feedback and updates the README accordingly
 
 ### Closing Stale README PRs
 
@@ -107,6 +101,10 @@ The `close_stale_prs.sh` script in the `src` directory is used to automatically 
 - Closes PRs whose branch names match the pattern related to the closed parent PR
 - Adds a comment explaining why the PR was closed
 
-This helps keep the repository clean by removing outdated README update suggestions.
+## Contributing
 
-Note: The GitHub Actions workflows respect the "NO README REVIEW" flag in pull request bodies, allowing for skipping README checks when needed.
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+[MIT License](https://opensource.org/licenses/MIT)
