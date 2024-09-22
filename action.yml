@@ -27,12 +27,6 @@ runs:
     - name: Check out the repository
       uses: actions/checkout@v4
 
-    - name: Check variables
-      shell: bash
-      run: |
-        echo "PR head ref: ${{ github.event.pull_request.head.ref }}"
-        echo "PR author: ${{ github.event.pull_request.user.login }}"
-
     # Set up Python environment
     - name: Set up Python
       uses: actions/setup-python@v3
