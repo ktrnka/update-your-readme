@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: ktrnka/update-your-readme@use_marketplace_action
+      - uses: ktrnka/update-your-readme@${{ github.event.pull_request.head }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
