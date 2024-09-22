@@ -3,7 +3,7 @@ import os
 import sys
 from argparse import ArgumentParser
 from dotenv import load_dotenv
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 from langchain_anthropic import ChatAnthropic
 from langchain_core.prompts import PromptTemplate
@@ -36,9 +36,9 @@ def pull_request_to_markdown(pr: PullRequest) -> str:
 model = ChatAnthropic(model='claude-3-5-sonnet-20240620')
 
 class UpdateRecommendation(BaseModel):
-    should_update: bool
-    reason: str
-    updated_readme: Optional[str]
+    should_update: bool = Field(description="Whether the README should be updated or not")
+    reason: str = Field(description="Reason for the recommendation")
+    updated_readme: Optional[str] = Field(description="Updated README content")
 
 # Copied from https://www.hatica.io/blog/best-practices-for-github-readme/
 readme_guidelines = """
