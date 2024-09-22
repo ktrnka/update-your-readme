@@ -15,4 +15,4 @@ jobs:
       - name: Close dependent README PRs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: src/close_stale_prs.sh
+        run: src/close_stale_prs.sh ${{ github.event.pull_request.number }}
