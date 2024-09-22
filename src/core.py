@@ -1,5 +1,6 @@
 from github import Github, Auth, Repository, PullRequest
 import os
+import sys
 from argparse import ArgumentParser
 from dotenv import load_dotenv
 from pydantic import BaseModel
@@ -117,8 +118,7 @@ C) The updated README content (if applicable)
 
 pipeline = prompt | model.with_structured_output(UpdateRecommendation)
 
-def review_pull_request(repo: Repository, pr_number: int) -> UpdateRecommendation:
-    pr = repo.get_pull(pr_number)
+def review_pull_request(repo: Repository, pr: PullRequest) -> UpdateRecommendation:
 
     result = pipeline.invoke({
         "readme_content": repo.get_contents("README.md").decoded_content.decode(),
@@ -138,7 +138,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     repo = github_client.get_repo(args.repository)
-    result = review_pull_request(repo, args.pr)
+    pr = repo.get_pull(args.pr)
+    if pr.body and "NO README REVIEW" in pr.body:
+        print("Skipping README check")
+        sys.exit(0)
+
+    result = review_pull_request(repo, pr)
 
     if result.should_update:
         print(f"Updating README with suggested changes: {result.reason}")
