@@ -32,6 +32,7 @@ runs:
 
     # Change directory to the cloned repository
     - name: Change directory
+      shell: bash
       run: cd ktrnka/update-your-readme
 
     # Set up Python environment
