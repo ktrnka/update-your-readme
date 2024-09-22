@@ -7,54 +7,35 @@ This project automatically updates README files based on changes in pull request
 - Analyzes pull requests for changes
 - Suggests README updates based on new dependencies and project structure
 - Uses LangChain and Anthropic's Claude model for intelligent suggestions
-- Command-line functionality for easy integration
 - Provides informative logging output about update actions
 - Option to skip README checks for testing purposes
 - Automatically closes stale README PRs
 
 ## Prerequisites
 
-- Python 3.11 or higher
+- GitHub repository
 - GitHub API token
 - Anthropic API key
-- GitHub CLI (gh) installed and authenticated
-
-## Installation
-
-1. Clone the repository:
-   ```
-   git clone https://github.com/ktrnka/update-your-readme.git
-   cd update-your-readme
-   ```
-
-2. Install dependencies:
-   ```
-   pip install pipenv
-   pipenv install
-   ```
-
-3. Set up environment variables:
-   - `GITHUB_TOKEN`: Your GitHub API token
-   - `ANTHROPIC_API_KEY`: Your Anthropic API key
 
 ## Usage
 
-Run the script with the following command:
+To use this action in your GitHub workflow, add the following step to your `.github/workflows/your-workflow.yml` file:
 
+```yaml
+- uses: ktrnka/update-your-readme@use_marketplace_action
+  with:
+    github-token: ${{ secrets.GITHUB_TOKEN }}
+    anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+    repository: ${{ github.repository }}
+    pull-request-number: ${{ github.event.pull_request.number }}
+    readme-file: README.md
 ```
-pipenv run python src/core.py --repository <owner>/<repo> --pr <pr_number> --readme <path_to_readme>
-```
 
-Replace:
-- `<owner>/<repo>` with the GitHub repository name
-- `<pr_number>` with the pull request number you want to analyze
-- `<path_to_readme>` with the path to your README file (e.g., README.md)
-
-The script will now provide informative output about its actions, including whether it's updating the README and the reason for the update.
+Make sure to set up the `ANTHROPIC_API_KEY` secret in your repository settings.
 
 ### Skipping README Check
 
-To skip the README check for testing purposes, include "NO README REVIEW" in the pull request body. This will cause the script to exit without performing any updates.
+To skip the README check for testing purposes, include "NO README REVIEW" in the pull request body. This will cause the action to exit without performing any updates.
 
 ## Project Structure
 
@@ -66,12 +47,15 @@ To skip the README check for testing purposes, include "NO README REVIEW" in the
 │       └── close_stale_prs.yml
 ├── src
 │   ├── core.py
-│   └── close_stale_prs.sh
+│   ├── close_stale_prs.sh
+│   ├── test_github.ipynb
+│   └── test_popular_repos.ipynb
 ├── .gitignore
 ├── NOTES.md
 ├── Pipfile
 ├── Pipfile.lock
-└── README.md
+├── README.md
+└── action.yml
 ```
 
 ## Contributing
@@ -87,10 +71,8 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 This project includes GitHub Actions workflows that enhance the README update process:
 
 1. **Suggest README Updates**: Defined in `.github/workflows/suggest_readme_updates.yml`, this workflow:
-   - Checks out the repository
-   - Sets up Python
-   - Installs dependencies
-   - Runs the README update script with the specified README file
+   - Uses the `ktrnka/update-your-readme@use_marketplace_action` action
+   - Runs the README update process
    - Creates a new pull request with the suggested changes
    - Adds a comment to the original pull request with a link to the suggested changes
 
