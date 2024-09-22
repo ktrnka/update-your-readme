@@ -53,20 +53,6 @@ runs:
         GITHUB_TOKEN: ${{ inputs.github-token }}
         ANTHROPIC_API_KEY: ${{ inputs.anthropic-api-key }}
     
-    # Extract branch name
-    - name: Extract branch name
-      shell: bash
-      run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
-      id: extract_branch
-    
-    # Get the PR author
-    - name: Get PR author
-      id: pr-author
-      shell: bash
-      run: |
-        PR_AUTHOR=$(jq -r '.pull_request.user.login' "$GITHUB_EVENT_PATH")
-        echo "author=$PR_AUTHOR" >> $GITHUB_OUTPUT
-
     # Create a new PR with README changes
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v7
@@ -82,8 +68,8 @@ runs:
           your existing README.
         labels: feature, automated pr
         branch: "update-your-readme-${{ inputs.pull-request-number }}"
-        base: ${{ steps.extract_branch.outputs.branch }}
-        reviewers: ${{ steps.pr-author.outputs.author }}
+        base: ${{ github.event.pull_request.head.ref }}
+        reviewers: ${{ github.event.pull_request.user.login }}
 
     # Comment on the original PR with a link to the newly created PR
     - name: Create comment
@@ -96,5 +82,5 @@ runs:
           Suggested README changes in PR ${{ steps.cpr.outputs.pull-request-url }}
 
 branding:
-  icon: 'file'
-  color: 'blue'
+  icon: 'book-open'
+  color: 'purple'
