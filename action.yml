@@ -49,6 +49,13 @@ runs:
         pip install pipenv
         pipenv install
 
+    # Print the current directory and list files
+    - name: Print working directory and list files
+      shell: bash
+      run: |
+        pwd
+        ls -F
+
     # Run the core logic to update the README
     # NOTE: Beware the ../..
     - name: Update README
