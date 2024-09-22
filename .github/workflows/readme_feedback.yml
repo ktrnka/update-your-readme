@@ -1,0 +1,35 @@
+name: Feedback for LLM-generated README updates
+
+on:
+  pull_request_review_comment:
+    types: [submitted]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pipenv
+          pipenv install
+      - name: Update README
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: pipenv run python src/core.py --repository ${GITHUB_REPOSITORY} --pr ${{ github.event.pull_request.number }} --readme README.md --feedback ${{ github.event.pull_request_comment.bodyText }}
+      - name: Extract branch name
+        shell: bash
+        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+        id: extract_branch
+      - name: Get PR author
+        id: pr-author
+        run: |
+          PR_AUTHOR=$(jq -r '.pull_request.user.login' "$GITHUB_EVENT_PATH")
+          echo "author=$PR_AUTHOR" >> $GITHUB_OUTPUT
