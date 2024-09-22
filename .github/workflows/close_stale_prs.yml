@@ -1,0 +1,26 @@
+name: Close stale README PRs
+
+on:
+  pull_request:
+    types:
+      - closed
+
+jobs:
+  close-prs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v3
+
+      - name: Close dependent PRs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Fetch all open pull requests (NOTE THE NAME OF THE BRANCH)
+          prs=$(gh pr list --state open --json number,headRefName -q '.[] | select(.headRefName | test("update-your-readme-${{ github.event.pull_request.number }}")).number')
+          
+          # Loop through each PR and close it
+          for pr in $prs; do
+            echo "Closing PR #$pr"
+            gh pr close $pr --comment "Closing this PR because the parent PR has been closed."
+          done
