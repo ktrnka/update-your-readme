@@ -57,7 +57,9 @@ runs:
       run: |
         pwd
         ls -F
-        ls -F ktrnka/update-your-readme
+        cd ktrnka/update-your-readme
+        pwd
+        ls -F
 
     # Run the core logic to update the README
     # NOTE: Beware the ../..
