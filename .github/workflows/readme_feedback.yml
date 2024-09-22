@@ -27,6 +27,7 @@ jobs:
         shell: bash
         run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
         id: extract_branch
+<<<<<<< HEAD
       - name: Get PR author
         id: pr-author
         run: |
@@ -56,3 +57,5 @@ jobs:
           issue-number: ${{ github.event.issue.number }}
           body: |
             "Updated PR using feedback from ${{ github.event.comment.id }}"
+=======
+>>>>>>> b4b8f3d (Update readme action)
