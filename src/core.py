@@ -15,7 +15,7 @@ github_client = Github(auth=Auth.Token(os.environ['GITHUB_TOKEN']))
 
 def repo_contents_to_markdown(repo: Repository) -> str:
     markdown = ""
-    for content in repo.get_contents(""):
+    for content in repo.get_git_tree("HEAD", recursive=True).tree:
         markdown += f"{content.path}\n"
     return markdown
 
@@ -38,7 +38,7 @@ model = ChatAnthropic(model='claude-3-5-sonnet-20240620')
 class UpdateRecommendation(BaseModel):
     should_update: bool
     reason: str
-    updated_readme: str
+    updated_readme: Optional[str]
 
 # Copied from https://www.hatica.io/blog/best-practices-for-github-readme/
 readme_guidelines = """
