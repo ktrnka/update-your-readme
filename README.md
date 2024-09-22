@@ -17,9 +17,9 @@ This project automatically updates README files based on changes in pull request
 - GitHub API token
 - Anthropic API key
 
-## Usage
+## Installation
 
-To use this action in your GitHub workflow, add the following step to your `.github/workflows/your-workflow.yml` file, replacing the version as needed:
+To use this action in your GitHub workflow, add the following step to your `.github/workflows/your-workflow.yml` file:
 
 ```yaml
 - uses: ktrnka/update-your-readme@v1
@@ -31,11 +31,19 @@ To use this action in your GitHub workflow, add the following step to your `.git
     readme-file: README.md
 ```
 
-Make sure to set up the `ANTHROPIC_API_KEY` secret in your repository settings. Under your repo settings, under Actions > General be sure to check "Allow GitHub Actions to create and approve pull requests" and allow read/write from Github Actions.
+Ensure you have set up the `ANTHROPIC_API_KEY` secret in your repository settings.
+
+## Usage
+
+### Setting Up GitHub Actions
+
+1. Go to your repository settings.
+2. Under "Actions > General," check "Allow GitHub Actions to create and approve pull requests."
+3. Enable read/write permissions for GitHub Actions.
 
 ### Skipping README Check
 
-To skip the README check for testing purposes, include "NO README REVIEW" in the pull request body. This will cause the action to exit without performing any updates.
+To skip the README check for testing purposes, include "NO README REVIEW" in the pull request body.
 
 ## Project Structure
 
@@ -66,25 +74,25 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 [MIT License](https://opensource.org/licenses/MIT)
 
-## GitHub Actions Integration
+## GitHub Actions Workflows
 
-This project includes GitHub Actions workflows that enhance the README update process:
+### Suggest README Updates
 
-1. **Suggest README Updates**: Defined in `.github/workflows/suggest_readme_updates.yml`, this workflow:
-   - Uses the `ktrnka/update-your-readme@use_marketplace_action` action
-   - Runs the README update process
-   - Creates a new pull request with the suggested changes
-   - Adds a comment to the original pull request with a link to the suggested changes
+Defined in `.github/workflows/suggest_readme_updates.yml`:
+- Uses the `ktrnka/update-your-readme@use_marketplace_action` action
+- Runs the README update process
+- Creates a new pull request with suggested changes
+- Adds a comment to the original pull request with a link to the suggested changes
 
-2. **Close Stale README PRs**: Defined in `.github/workflows/close_stale_prs.yml`, this workflow:
-   - Triggers when a pull request is closed
-   - Runs a shell script to identify and close any stale README update PRs associated with the closed PR
+### Close Stale README PRs
 
-To use these features, ensure that your repository has the necessary secrets set up (`GITHUB_TOKEN` and `ANTHROPIC_API_KEY`).
+Defined in `.github/workflows/close_stale_prs.yml`:
+- Triggers when a pull request is closed
+- Runs a shell script to identify and close any stale README update PRs associated with the closed PR
 
-### Closing Stale README PRs
+## Closing Stale README PRs
 
-The `close_stale_prs.sh` script in the `src` directory is used to automatically close stale README PRs. It:
+The `close_stale_prs.sh` script in the `src` directory:
 - Identifies open pull requests with the "automated pr" label
 - Closes PRs whose branch names match the pattern related to the closed parent PR
 - Adds a comment explaining why the PR was closed
