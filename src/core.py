@@ -109,24 +109,28 @@ You'll review a pull request and determine if the README should be updated, then
 # PR Patch
 {pr_patch}
 
+# User Feedback
+{feedback}
+
 # Task
 Based on the above information, please provide a structured output indicating:
 A) should_update: Should the README be updated?
 B) reason: Why?
 C) updated_readme: The updated README content (if applicable)
-                                      
+
 If the README should be updated, take care to write teh updated_readme
 """)
 
 pipeline = prompt | model.with_structured_output(UpdateRecommendation)
 
-def review_pull_request(repo: Repository, pr: PullRequest, tries_remaining=3) -> UpdateRecommendation:
+def review_pull_request(repo: Repository, pr: PullRequest, tries_remaining=3, feedback: str = None) -> UpdateRecommendation:
     try:
         result = pipeline.invoke({
             "readme_content": repo.get_contents("README.md", ref=pr.base.sha).decoded_content.decode(),
             "file_tree": repo_contents_to_markdown(repo, "HEAD"),
             "pr_patch": pull_request_to_markdown(pr),
-            "readme_guidelines": readme_guidelines
+            "readme_guidelines": readme_guidelines,
+            "feedback": feedback
         })
 
         # Trigger a retry if the updated README is required but not provided
@@ -140,13 +144,14 @@ def review_pull_request(repo: Repository, pr: PullRequest, tries_remaining=3) ->
             return review_pull_request(repo, pr, tries_remaining - 1)
         else:
             raise e
-
+    return result
 
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--repository", "-r", type=str, help="Repository name")
     parser.add_argument("--readme", type=str, help="README file")
     parser.add_argument("--pr", type=int, help="Pull request number")
+    parser.add_argument("--feedback", type=str, help="User feedback for LLM")
 
     args = parser.parse_args()
 
@@ -157,7 +162,7 @@ if __name__ == "__main__":
         print("Skipping README check")
         sys.exit(0)
 
-    result = review_pull_request(repo, pr)
+    result = review_pull_request(repo, pr, feedback=args.feedback)
 
     if result.should_update and result.updated_readme:
         print(f"Updating README with suggested changes: {result.reason}")
