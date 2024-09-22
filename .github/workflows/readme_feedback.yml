@@ -22,7 +22,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: pipenv run python src/core.py --repository ${GITHUB_REPOSITORY} --pr ${{ github.event.issue.id }} --readme README.md --feedback ${{ github.event.comment.body }}
+        run: pipenv run python src/core.py --repository ${GITHUB_REPOSITORY} --pr ${{ github.event.issue.id }} --readme README.md --feedback "${{ github.event.comment.body }}"
       - name: Extract branch name
         shell: bash
         run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
