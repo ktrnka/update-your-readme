@@ -44,13 +44,13 @@ To skip the README check for testing purposes, include "NO README REVIEW" in the
 ├── .github
 │   └── workflows
 │       ├── suggest_readme_updates.yml
-│       └── close_stale_prs.yml
+│       ├── close_stale_prs.yml
+│       └── readme_feedback.yml
 ├── src
 │   ├── core.py
 │   ├── close_stale_prs.sh
 │   ├── test_github.ipynb
-│   ├── test_popular_repos.ipynb
-│   └── main.py
+│   └── test_popular_repos.ipynb
 ├── .gitignore
 ├── NOTES.md
 ├── Pipfile
@@ -80,6 +80,9 @@ This project includes GitHub Actions workflows that enhance the README update pr
 2. **Close Stale README PRs**: Defined in `.github/workflows/close_stale_prs.yml`, this workflow:
    - Triggers when a pull request is closed
    - Runs a shell script to identify and close any stale README update PRs associated with the closed PR
+
+3. **README Feedback**: Defined in `.github/workflows/readme_feedback.yml`, this workflow:
+   - Handles feedback on README updates
 
 To use these features, ensure that your repository has the necessary secrets set up (`GITHUB_TOKEN` and `ANTHROPIC_API_KEY`).
 
