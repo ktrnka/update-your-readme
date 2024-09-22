@@ -13,9 +13,9 @@ load_dotenv()
 
 github_client = Github(auth=Auth.Token(os.environ['GITHUB_TOKEN']))
 
-def repo_contents_to_markdown(repo: Repository) -> str:
+def repo_contents_to_markdown(repo: Repository, sha: str = "HEAD") -> str:
     markdown = ""
-    for content in repo.get_git_tree("HEAD", recursive=True).tree:
+    for content in repo.get_git_tree(sha, recursive=True).tree:
         markdown += f"{content.path}\n"
     return markdown
 
@@ -121,8 +121,8 @@ pipeline = prompt | model.with_structured_output(UpdateRecommendation)
 def review_pull_request(repo: Repository, pr: PullRequest) -> UpdateRecommendation:
 
     result = pipeline.invoke({
-        "readme_content": repo.get_contents("README.md").decoded_content.decode(),
-        "file_tree": repo_contents_to_markdown(repo),
+        "readme_content": repo.get_contents("README.md", ref=pr.base.sha).decoded_content.decode(),
+        "file_tree": repo_contents_to_markdown(repo, "HEAD"),
         "pr_patch": pull_request_to_markdown(pr),
         "readme_guidelines": readme_guidelines
     })
@@ -139,13 +139,14 @@ if __name__ == "__main__":
 
     repo = github_client.get_repo(args.repository)
     pr = repo.get_pull(args.pr)
+
     if pr.body and "NO README REVIEW" in pr.body:
         print("Skipping README check")
         sys.exit(0)
 
     result = review_pull_request(repo, pr)
 
-    if result.should_update:
+    if result.should_update and result.updated_readme:
         print(f"Updating README with suggested changes: {result.reason}")
         with open(args.readme, "w") as f:
             f.write(result.updated_readme)
