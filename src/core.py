@@ -113,7 +113,7 @@ You'll review a pull request and determine if the README should be updated, then
 Based on the above information, please provide a structured output indicating:
 A) Should the README be updated?
 B) Why?
-C) The updated README content (if applicable)
+C) The updated README content
 """)
 
 pipeline = prompt | model.with_structured_output(UpdateRecommendation)
