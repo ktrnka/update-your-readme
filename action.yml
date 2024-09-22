@@ -23,9 +23,16 @@ inputs:
 runs:
   using: "composite"
   steps:
-    # Checkout the repository
-    - name: Check out the repository
+    # Checkout the repository (TODO: Use the version pinned in the workflow)
+    - name: Check out ktrnka/update-your-readme
       uses: actions/checkout@v4
+      with:
+        repository: ktrnka/update-your-readme
+        path: ktrnka/update-your-readme
+
+    # Change directory to the cloned repository
+    - name: Change directory
+      run: cd ktrnka/update-your-readme
 
     # Set up Python environment
     - name: Set up Python
@@ -42,13 +49,14 @@ runs:
         pipenv install
 
     # Run the core logic to update the README
+    # NOTE: Beware the ../..
     - name: Update README
       shell: bash
       run: |
         pipenv run python src/core.py \
         --repository ${{ inputs.repository }} \
         --pr ${{ inputs.pull-request-number }} \
-        --readme ${{ inputs.readme-file }}
+        --readme ../../${{ inputs.readme-file }}
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
         ANTHROPIC_API_KEY: ${{ inputs.anthropic-api-key }}
