@@ -19,10 +19,10 @@ This project automatically updates README files based on changes in pull request
 
 ## Usage
 
-To use this action in your GitHub workflow, add the following step to your `.github/workflows/your-workflow.yml` file:
+To use this action in your GitHub workflow, add the following step to your `.github/workflows/your-workflow.yml` file, replacing the version as needed:
 
 ```yaml
-- uses: ktrnka/update-your-readme@use_marketplace_action
+- uses: ktrnka/update-your-readme@v1
   with:
     github-token: ${{ secrets.GITHUB_TOKEN }}
     anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -31,7 +31,7 @@ To use this action in your GitHub workflow, add the following step to your `.git
     readme-file: README.md
 ```
 
-Make sure to set up the `ANTHROPIC_API_KEY` secret in your repository settings.
+Make sure to set up the `ANTHROPIC_API_KEY` secret in your repository settings. Under your repo settings, under Actions > General be sure to check "Allow GitHub Actions to create and approve pull requests" and allow read/write from Github Actions.
 
 ### Skipping README Check
 
