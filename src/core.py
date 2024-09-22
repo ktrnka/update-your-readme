@@ -3,7 +3,7 @@ import os
 import sys
 from argparse import ArgumentParser
 from dotenv import load_dotenv
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 from typing import Optional
 from langchain_anthropic import ChatAnthropic
 from langchain_core.prompts import PromptTemplate
@@ -38,7 +38,7 @@ model = ChatAnthropic(model='claude-3-5-sonnet-20240620')
 class UpdateRecommendation(BaseModel):
     should_update: bool = Field(description="Whether the README should be updated or not")
     reason: str = Field(description="Reason for the recommendation")
-    updated_readme: Optional[str] = Field(description="Updated README content")
+    updated_readme: Optional[str] = Field(description="Updated README content, required if should_update is True, otherwise optional", default=None)
 
 # Copied from https://www.hatica.io/blog/best-practices-for-github-readme/
 readme_guidelines = """
@@ -111,22 +111,35 @@ You'll review a pull request and determine if the README should be updated, then
 
 # Task
 Based on the above information, please provide a structured output indicating:
-A) Should the README be updated?
-B) Why?
-C) The updated README content (if applicable)
+A) should_update: Should the README be updated?
+B) reason: Why?
+C) updated_readme: The updated README content (if applicable)
+                                      
+If the README should be updated, take care to write teh updated_readme
 """)
 
 pipeline = prompt | model.with_structured_output(UpdateRecommendation)
 
-def review_pull_request(repo: Repository, pr: PullRequest) -> UpdateRecommendation:
+def review_pull_request(repo: Repository, pr: PullRequest, tries_remaining=3) -> UpdateRecommendation:
+    try:
+        result = pipeline.invoke({
+            "readme_content": repo.get_contents("README.md", ref=pr.base.sha).decoded_content.decode(),
+            "file_tree": repo_contents_to_markdown(repo, "HEAD"),
+            "pr_patch": pull_request_to_markdown(pr),
+            "readme_guidelines": readme_guidelines
+        })
 
-    result = pipeline.invoke({
-        "readme_content": repo.get_contents("README.md", ref=pr.base.sha).decoded_content.decode(),
-        "file_tree": repo_contents_to_markdown(repo, "HEAD"),
-        "pr_patch": pull_request_to_markdown(pr),
-        "readme_guidelines": readme_guidelines
-    })
-    return result
+        # Trigger a retry if the updated README is required but not provided
+        if result.should_update and not result.updated_readme:
+            raise ValueError("Updated README content is required if should_update is True")
+
+        return result
+    except (ValidationError, ValueError) as e:
+        if tries_remaining > 0:
+            print("Validation error, trying again")
+            return review_pull_request(repo, pr, tries_remaining - 1)
+        else:
+            raise e
 
 
 if __name__ == "__main__":
