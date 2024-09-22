@@ -35,6 +35,7 @@ runs:
     
     # Install dependencies
     - name: Install dependencies
+      shell: bash
       run: |
         python -m pip install --upgrade pip
         pip install pipenv
@@ -42,6 +43,7 @@ runs:
 
     # Run the core logic to update the README
     - name: Update README
+      shell: bash
       run: |
         pipenv run python src/core.py \
         --repository ${{ inputs.repository }} \
@@ -60,6 +62,7 @@ runs:
     # Get the PR author
     - name: Get PR author
       id: pr-author
+      shell: bash
       run: |
         PR_AUTHOR=$(jq -r '.pull_request.user.login' "$GITHUB_EVENT_PATH")
         echo "author=$PR_AUTHOR" >> $GITHUB_OUTPUT
