@@ -10,12 +10,14 @@ This project automatically updates README files based on changes in pull request
 - Command-line functionality for easy integration
 - Provides informative logging output about update actions
 - Option to skip README checks for testing purposes
+- Automatically closes stale README PRs
 
 ## Prerequisites
 
 - Python 3.11 or higher
 - GitHub API token
 - Anthropic API key
+- GitHub CLI (gh) installed and authenticated
 
 ## Installation
 
@@ -60,9 +62,11 @@ To skip the README check for testing purposes, include "NO README REVIEW" in the
 .
 ├── .github
 │   └── workflows
-│       └── suggest_readme_updates.yml
+│       ├── suggest_readme_updates.yml
+│       └── close_stale_prs.yml
 ├── src
-│   └── core.py
+│   ├── core.py
+│   └── close_stale_prs.sh
 ├── .gitignore
 ├── NOTES.md
 ├── Pipfile
@@ -80,15 +84,29 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## GitHub Actions Integration
 
-This project includes a GitHub Actions workflow that automatically suggests README updates for pull requests. The workflow is defined in `.github/workflows/suggest_readme_updates.yml` and performs the following steps:
+This project includes GitHub Actions workflows that enhance the README update process:
 
-1. Checks out the repository
-2. Sets up Python
-3. Installs dependencies
-4. Runs the README update script with the specified README file
-5. Creates a new pull request with the suggested changes
-6. Adds a comment to the original pull request with a link to the suggested changes
+1. **Suggest README Updates**: Defined in `.github/workflows/suggest_readme_updates.yml`, this workflow:
+   - Checks out the repository
+   - Sets up Python
+   - Installs dependencies
+   - Runs the README update script with the specified README file
+   - Creates a new pull request with the suggested changes
+   - Adds a comment to the original pull request with a link to the suggested changes
 
-To use this feature, ensure that your repository has the necessary secrets set up (`GITHUB_TOKEN` and `ANTHROPIC_API_KEY`).
+2. **Close Stale README PRs**: Defined in `.github/workflows/close_stale_prs.yml`, this workflow:
+   - Triggers when a pull request is closed
+   - Runs a shell script to identify and close any stale README update PRs associated with the closed PR
 
-Note: The GitHub Actions workflow respects the "NO README REVIEW" flag in pull request bodies, allowing for skipping README checks when needed.
+To use these features, ensure that your repository has the necessary secrets set up (`GITHUB_TOKEN` and `ANTHROPIC_API_KEY`).
+
+### Closing Stale README PRs
+
+The `close_stale_prs.sh` script in the `src` directory is used to automatically close stale README PRs. It:
+- Identifies open pull requests with the "automated pr" label
+- Closes PRs whose branch names match the pattern related to the closed parent PR
+- Adds a comment explaining why the PR was closed
+
+This helps keep the repository clean by removing outdated README update suggestions.
+
+Note: The GitHub Actions workflows respect the "NO README REVIEW" flag in pull request bodies, allowing for skipping README checks when needed.
