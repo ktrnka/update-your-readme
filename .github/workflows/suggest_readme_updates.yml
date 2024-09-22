@@ -9,7 +9,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: ktrnka/update-your-readme@${{ github.event.pull_request.head }}
+      # Note: This points to the latest version on main; users should pull a tagged version instead
+      # When doing development on a branch, point to the branch
+      - uses: ktrnka/update-your-readme@main
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
