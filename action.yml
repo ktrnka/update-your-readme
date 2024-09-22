@@ -96,5 +96,5 @@ runs:
           Suggested README changes in PR ${{ steps.cpr.outputs.pull-request-url }}
 
 branding:
-  icon: 'file'
-  color: 'blue'
+  icon: 'book-open'
+  color: 'purple'
