@@ -93,6 +93,7 @@ runs:
         branch: "update-your-readme-${{ inputs.pull-request-number }}"
         base: ${{ github.event.pull_request.head.ref }}
         reviewers: ${{ github.event.pull_request.user.login }}
+        add-paths: ${{ inputs.readme-file }}
 
     # Comment on the original PR with a link to the newly created PR
     - name: Create comment
