@@ -22,7 +22,7 @@ jobs:
         shell: bash
         id: original-pr
         run: |
-          ORIGINAL_PR=$(jq -r '.issue.title' "$GITHUB_EVENT_PATH" | rev | cut -w -f1)
+          ORIGINAL_PR=$(jq -r '.issue.title' "$GITHUB_EVENT_PATH" | rev | cut -d" " -f1)
       - name: Update README
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
