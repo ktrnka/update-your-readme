@@ -36,15 +36,9 @@ def pull_request_to_markdown(pr: PullRequest) -> str:
 model = ChatAnthropic(model='claude-3-5-sonnet-20240620')
 
 class UpdateRecommendation(BaseModel):
-<<<<<<< HEAD
     should_update: bool = Field(description="Whether the README should be updated or not")
     reason: str = Field(description="Reason for the recommendation")
     updated_readme: Optional[str] = Field(description="Updated README content, required if should_update is True, otherwise optional", default=None)
-=======
-    should_update: bool
-    reason: str
-    updated_readme: Optional[str] = None
->>>>>>> 51fb6ad (Tweak prompt)
 
 # Copied from https://www.hatica.io/blog/best-practices-for-github-readme/
 readme_guidelines = """
