@@ -14,7 +14,7 @@ jobs:
 
       # Note: This points to the latest version on main; users should pull a tagged version instead
       # When doing development on a branch, point to the branch
-      - uses: ktrnka/update-your-readme@main
+      - uses: ktrnka/update-your-readme@cleanup
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}

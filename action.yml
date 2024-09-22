@@ -67,7 +67,7 @@ runs:
       shell: bash
       run: |
         cd ktrnka/update-your-readme
-        pipenv run python src/core.py \
+        pipenv run python src/main.py \
         --repository ${{ inputs.repository }} \
         --pr ${{ inputs.pull-request-number }} \
         --readme ../../${{ inputs.readme-file }}
