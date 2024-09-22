@@ -49,7 +49,8 @@ To skip the README check for testing purposes, include "NO README REVIEW" in the
 │   ├── core.py
 │   ├── close_stale_prs.sh
 │   ├── test_github.ipynb
-│   └── test_popular_repos.ipynb
+│   ├── test_popular_repos.ipynb
+│   └── main.py
 ├── .gitignore
 ├── NOTES.md
 ├── Pipfile
