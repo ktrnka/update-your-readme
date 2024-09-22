@@ -2,7 +2,6 @@ name: Feedback for LLM-generated README updates
 
 on:
   pull_request_review_comment:
-    types: [submitted]
 
 jobs:
   build:
