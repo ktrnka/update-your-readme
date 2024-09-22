@@ -23,9 +23,17 @@ inputs:
 runs:
   using: "composite"
   steps:
-    # Checkout the repository
-    - name: Check out the repository
+    # Checkout the repository (TODO: Use the version pinned in the workflow)
+    - name: Check out ktrnka/update-your-readme
       uses: actions/checkout@v4
+      with:
+        repository: ktrnka/update-your-readme
+        path: ktrnka/update-your-readme
+
+    # Change directory to the cloned repository
+    # - name: Change directory
+    #   shell: bash
+    #   run: cd ktrnka/update-your-readme
 
     # Set up Python environment
     - name: Set up Python
@@ -37,18 +45,33 @@ runs:
     - name: Install dependencies
       shell: bash
       run: |
+        cd ktrnka/update-your-readme
         python -m pip install --upgrade pip
         pip install pipenv
         pipenv install
+        cd -
+
+    # Print the current directory and list files
+    - name: Print working directory and list files
+      shell: bash
+      run: |
+        pwd
+        ls -F
+        cd ktrnka/update-your-readme
+        pwd
+        ls -F
 
     # Run the core logic to update the README
+    # NOTE: Beware the ../..
     - name: Update README
       shell: bash
       run: |
+        cd ktrnka/update-your-readme
         pipenv run python src/core.py \
         --repository ${{ inputs.repository }} \
         --pr ${{ inputs.pull-request-number }} \
-        --readme ${{ inputs.readme-file }}
+        --readme ../../${{ inputs.readme-file }}
+        cd -
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
         ANTHROPIC_API_KEY: ${{ inputs.anthropic-api-key }}
@@ -70,6 +93,7 @@ runs:
         branch: "update-your-readme-${{ inputs.pull-request-number }}"
         base: ${{ github.event.pull_request.head.ref }}
         reviewers: ${{ github.event.pull_request.user.login }}
+        add-paths: ${{ inputs.readme-file }}
 
     # Comment on the original PR with a link to the newly created PR
     - name: Create comment
