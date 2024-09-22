@@ -9,6 +9,7 @@ This project automatically updates README files based on changes in pull request
 - Uses LangChain and Anthropic's Claude model for intelligent suggestions
 - Command-line functionality for easy integration
 - Provides informative logging output about update actions
+- Automatically suggests README updates via GitHub Actions
 
 ## Prerequisites
 
@@ -82,6 +83,8 @@ This project includes a GitHub Actions workflow that automatically suggests READ
 3. Installs dependencies
 4. Runs the README update script with the specified README file
 5. Creates a new pull request with the suggested changes
-6. Adds a comment to the original pull request with a link to the suggested changes
+6. Adds a comment to the original pull request with a link to the suggested changes, but only if a new pull request was created
 
 To use this feature, ensure that your repository has the necessary secrets set up (`GITHUB_TOKEN` and `ANTHROPIC_API_KEY`).
+
+Note: The comment creation step is conditional and will only occur if a new pull request with suggested changes was created. This helps to avoid unnecessary notifications when no changes are needed.
