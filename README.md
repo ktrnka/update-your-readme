@@ -96,3 +96,14 @@ The `close_stale_prs.sh` script in the `src` directory is used to automatically 
 This helps keep the repository clean by removing outdated README update suggestions.
 
 Note: The GitHub Actions workflows respect the "NO README REVIEW" flag in pull request bodies, allowing for skipping README checks when needed.
+
+### Diagram
+Here is a simple flow chart:
+
+```mermaid
+graph TD;
+    A-->B;
+    A-->C;
+    B-->D;
+    C-->D;
+```
