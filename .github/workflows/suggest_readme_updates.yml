@@ -9,6 +9,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Check out ktrnka/update-your-readme
+        uses: actions/checkout@v4
+
       # Note: This points to the latest version on main; users should pull a tagged version instead
       # When doing development on a branch, point to the branch
       - uses: ktrnka/update-your-readme@portability

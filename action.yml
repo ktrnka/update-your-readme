@@ -31,9 +31,9 @@ runs:
         path: ktrnka/update-your-readme
 
     # Change directory to the cloned repository
-    - name: Change directory
-      shell: bash
-      run: cd ktrnka/update-your-readme
+    # - name: Change directory
+    #   shell: bash
+    #   run: cd ktrnka/update-your-readme
 
     # Set up Python environment
     - name: Set up Python
@@ -45,9 +45,11 @@ runs:
     - name: Install dependencies
       shell: bash
       run: |
+        cd ktrnka/update-your-readme
         python -m pip install --upgrade pip
         pip install pipenv
         pipenv install
+        cd -
 
     # Print the current directory and list files
     - name: Print working directory and list files
@@ -55,16 +57,19 @@ runs:
       run: |
         pwd
         ls -F
+        ls -F ktrnka/update-your-readme
 
     # Run the core logic to update the README
     # NOTE: Beware the ../..
     - name: Update README
       shell: bash
       run: |
+        cd ktrnka/update-your-readme
         pipenv run python src/core.py \
         --repository ${{ inputs.repository }} \
         --pr ${{ inputs.pull-request-number }} \
         --readme ../../${{ inputs.readme-file }}
+        cd -
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
         ANTHROPIC_API_KEY: ${{ inputs.anthropic-api-key }}
