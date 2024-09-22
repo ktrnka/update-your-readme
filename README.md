@@ -9,6 +9,7 @@ This project automatically updates README files based on changes in pull request
 - Uses LangChain and Anthropic's Claude model for intelligent suggestions
 - Command-line functionality for easy integration
 - Provides informative logging output about update actions
+- Option to skip README checks for testing purposes
 
 ## Prerequisites
 
@@ -49,6 +50,10 @@ Replace:
 
 The script will now provide informative output about its actions, including whether it's updating the README and the reason for the update.
 
+### Skipping README Check
+
+To skip the README check for testing purposes, include "NO README REVIEW" in the pull request body. This will cause the script to exit without performing any updates.
+
 ## Project Structure
 
 ```
@@ -85,3 +90,5 @@ This project includes a GitHub Actions workflow that automatically suggests READ
 6. Adds a comment to the original pull request with a link to the suggested changes
 
 To use this feature, ensure that your repository has the necessary secrets set up (`GITHUB_TOKEN` and `ANTHROPIC_API_KEY`).
+
+Note: The GitHub Actions workflow respects the "NO README REVIEW" flag in pull request bodies, allowing for skipping README checks when needed.
