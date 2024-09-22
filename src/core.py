@@ -139,7 +139,7 @@ if __name__ == "__main__":
 
     repo = github_client.get_repo(args.repository)
     pr = repo.get_pull(args.pr)
-    if "NO README REVIEW" in pr.body:
+    if pr.body and "NO README REVIEW" in pr.body:
         print("Skipping README check")
         sys.exit(0)
 
