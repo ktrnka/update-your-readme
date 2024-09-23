@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from pydantic import BaseModel, Field, ValidationError
 from typing import Optional
 from langchain_anthropic import ChatAnthropic
-from langchain_core.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate, ChatPromptTemplate
 
 
 load_dotenv()
@@ -35,7 +35,10 @@ def pull_request_to_markdown(pr: PullRequest) -> str:
 # model notes
 # What we used before: claude-3-5-sonnet-20240620
 # Fast, cheap: claude-3-haiku-20240307
-model = ChatAnthropic(model='claude-3-haiku-20240307')
+model = ChatAnthropic(
+    model='claude-3-haiku-20240307',
+    extra_headers={"anthropic-beta": "prompt-caching-2024-07-31"}
+    )
 
 class UpdateRecommendation(BaseModel):
     should_update: bool = Field(description="Whether the README should be updated or not")
@@ -98,10 +101,6 @@ Write using clear and concise language to ensure that your README is easily unde
 """
 
 prompt = PromptTemplate.from_template("""
-You'll review a pull request and determine if the README should be updated, then suggest appropriate changes.
-
-{readme_guidelines}
-
 # Existing README
 {readme_content}
 
@@ -120,7 +119,42 @@ C) updated_readme: The updated README content (if applicable)
 If the README should be updated, take care to write teh updated_readme
 """)
 
-pipeline = prompt | model.with_structured_output(UpdateRecommendation)
+from langchain_core.messages import SystemMessage, HumanMessage
+
+prompt_v2 = ChatPromptTemplate.from_messages([
+    SystemMessage(content=[
+        {
+            # According to the github issue comments, this cannot have any Langchain prompt variables in it but we can do Python string interpolation
+            "text": f"""
+You'll review a pull request and determine if the README should be updated, then suggest appropriate changes.
+
+{readme_guidelines}
+""",
+            "type": "text",
+            "cache_control": {"type": "ephemeral"},
+        }
+    ]),
+    HumanMessage(content="""
+# Existing README
+{readme_content}
+
+# PR Patch
+{pr_patch}
+
+# User Feedback
+{feedback}
+
+# Task
+Based on the above information, please provide a structured output indicating:
+A) should_update: Should the README be updated?
+B) reason: Why?
+C) updated_readme: The updated README content (if applicable)
+
+If the README should be updated, take care to write teh updated_readme
+""")
+])
+
+pipeline = prompt_v2 | model.with_structured_output(UpdateRecommendation)
 
 def review_pull_request(repo: Repository, pr: PullRequest, tries_remaining=1, feedback: str = None) -> UpdateRecommendation:
     try:
