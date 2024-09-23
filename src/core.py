@@ -1,44 +1,101 @@
+import warnings
 from github import Github, Auth, Repository, PullRequest
 import os
 import sys
 from argparse import ArgumentParser
 from dotenv import load_dotenv
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field, ValidationError, model_validator
 from typing import Optional
 from langchain_anthropic import ChatAnthropic
-from langchain_core.prompts import PromptTemplate
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.messages import SystemMessage, HumanMessage
 
 
 load_dotenv()
 
-github_client = Github(auth=Auth.Token(os.environ['GITHUB_TOKEN']))
+github_client = Github(auth=Auth.Token(os.environ["GITHUB_TOKEN"]))
 
-def repo_contents_to_markdown(repo: Repository, sha: str = "HEAD") -> str:
-    markdown = ""
-    for content in repo.get_git_tree(sha, recursive=True).tree:
-        markdown += f"{content.path}\n"
-    return markdown
 
-def pull_request_to_markdown(pr: PullRequest) -> str:
+def pull_request_to_markdown(pr: PullRequest, excluded_diff_types={"ipynb"}) -> str:
+    """
+    Format key information from the pull request as markdown suitable for LLM input
+    """
     text = f"""
-# [{pr.title}]){pr.html_url}
+## [{pr.title}]){pr.html_url}
 {pr.body or 'No description provided.'}
 
 """
     for file in pr.get_files():
-        patch = file.patch or "Can't render patch."
+        patch = "Can't render patch."
+        if file.patch and file.filename.split(".")[-1] not in excluded_diff_types:
+            patch = file.patch
         text += f"""## {file.filename}\n{patch}\n\n"""
 
     return text
 
 
+# model notes
+# What we used before: claude-3-5-sonnet-20240620
+# Fast, cheap: claude-3-haiku-20240307
+with warnings.catch_warnings():
+    # The specific UserWarning we're ignoring is:
+    # UserWarning: WARNING! extra_headers is not default parameter.
+    #             extra_headers was transferred to model_kwargs.
+    #             Please confirm that extra_headers is what you intended.
+    warnings.filterwarnings("ignore", category=UserWarning)
 
-model = ChatAnthropic(model='claude-3-5-sonnet-20240620')
+    model = ChatAnthropic(
+        model="claude-3-5-sonnet-20240620",
+        # The default is 1024 which leads to pipeline failures
+        # Sonnet supports 8192 tokens, Haiku supports 4096 tokens
+        max_tokens=4096,
+        # On prompt caching:
+        # https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
+        # https://api.python.langchain.com/en/latest/chat_models/langchain_anthropic.chat_models.ChatAnthropic.html
+        extra_headers={"anthropic-beta": "prompt-caching-2024-07-31"},
+    )
 
-class UpdateRecommendation(BaseModel):
-    should_update: bool = Field(description="Whether the README should be updated or not")
+
+class ReadmeRecommendation(BaseModel):
+    """
+    Structured output for the README review task
+    """
+
+    should_update: bool = Field(
+        description="Whether the README should be updated or not"
+    )
     reason: str = Field(description="Reason for the recommendation")
-    updated_readme: Optional[str] = Field(description="Updated README content, required if should_update is True, otherwise optional", default=None)
+    updated_readme: Optional[str] = Field(
+        description="Updated README content, required if should_update is True, otherwise optional",
+        default=None,
+    )
+
+    @model_validator(mode="after")
+    def post_validation_check(self) -> "ReadmeRecommendation":
+        if self.should_update and self.updated_readme is None:
+            raise ValueError("updated_readme must be provided if should_update is True")
+
+        return self
+
+
+def test_output_validation():
+    # importing here because it's a dev dependency
+    import pytest
+
+    # test that it works normally
+    ReadmeRecommendation(should_update=True, reason="test", updated_readme="test")
+
+    # test that it fails with missing fields
+    with pytest.raises(ValidationError):
+        ReadmeRecommendation(should_update=True)
+
+    # test that it passes if should_update is False and the updated_readme is missing
+    ReadmeRecommendation(should_update=False, reason="test")
+
+    # test that it fails if should_update is True and the updated_readme is missing
+    with pytest.raises(ValidationError):
+        ReadmeRecommendation(should_update=True, reason="test")
+
 
 # Copied from https://www.hatica.io/blog/best-practices-for-github-readme/
 readme_guidelines = """
@@ -95,21 +152,38 @@ Write using clear and concise language to ensure that your README is easily unde
 
 """
 
-prompt = PromptTemplate.from_template("""
+
+def fill_prompt(
+    readme: str, pull_request_markdown: str, feedback: str
+) -> ChatPromptTemplate:
+    return ChatPromptTemplate.from_messages(
+        [
+            SystemMessage(
+                content=[
+                    {
+                        "type": "text",
+                        # This triggers caching for this message AND all messages before it in the pipeline, also including any tool prompts
+                        # Source: https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
+                        "cache_control": {"type": "ephemeral"},
+                        # If we want prompt caching, this can't have any Langchain prompt variables in it
+                        # Source: https://github.com/langchain-ai/langchain/discussions/25610
+                        "text": f"""
 You'll review a pull request and determine if the README should be updated, then suggest appropriate changes.
 
 {readme_guidelines}
+""",
+                    }
+                ]
+            ),
+            HumanMessage(
+                content=f"""
+# Existing README from the base branch
+{readme}
 
-# Existing README
-{readme_content}
+# Pull request changes
+{pull_request_markdown}
 
-# File Tree
-{file_tree}
-
-# PR Patch
-{pr_patch}
-
-# User Feedback
+# Optional User Feedback about README updates
 {feedback}
 
 # Task
@@ -118,33 +192,35 @@ A) should_update: Should the README be updated?
 B) reason: Why?
 C) updated_readme: The updated README content (if applicable)
 
-If the README should be updated, take care to write teh updated_readme
-""")
+If the README should be updated, take care to write the updated_readme
+"""
+            ),
+        ]
+    )
 
-pipeline = prompt | model.with_structured_output(UpdateRecommendation)
 
-def review_pull_request(repo: Repository, pr: PullRequest, tries_remaining=3, feedback: str = None) -> UpdateRecommendation:
+def review_pull_request(
+    repo: Repository, pr: PullRequest, tries_remaining=1, feedback: str = None
+) -> ReadmeRecommendation:
+
     try:
-        result = pipeline.invoke({
-            "readme_content": repo.get_contents("README.md", ref=pr.base.sha).decoded_content.decode(),
-            "file_tree": repo_contents_to_markdown(repo, "HEAD"),
-            "pr_patch": pull_request_to_markdown(pr),
-            "readme_guidelines": readme_guidelines,
-            "feedback": feedback
-        })
+        readme = repo.get_contents(
+            "README.md", ref=pr.base.sha
+        ).decoded_content.decode()
 
-        # Trigger a retry if the updated README is required but not provided
-        if result.should_update and not result.updated_readme:
-            raise ValueError("Updated README content is required if should_update is True")
+        pipeline = fill_prompt(
+            readme, pull_request_to_markdown(pr), feedback
+        ) | model.with_structured_output(ReadmeRecommendation)
+        result = pipeline.invoke({})
 
         return result
-    except (ValidationError, ValueError) as e:
-        if tries_remaining > 0:
+    except ValidationError as e:
+        if tries_remaining > 1:
             print("Validation error, trying again")
             return review_pull_request(repo, pr, tries_remaining - 1)
         else:
             raise e
-    return result
+
 
 if __name__ == "__main__":
     parser = ArgumentParser()
