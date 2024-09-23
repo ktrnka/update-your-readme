@@ -3,7 +3,7 @@ import os
 import sys
 from argparse import ArgumentParser
 from dotenv import load_dotenv
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field, ValidationError, model_validator, root_validator
 from typing import Optional
 from langchain_anthropic import ChatAnthropic
 from langchain_core.prompts import ChatPromptTemplate
@@ -57,6 +57,14 @@ class UpdateRecommendation(BaseModel):
         description="Updated README content, required if should_update is True, otherwise optional",
         default=None,
     )
+
+    @model_validator(mode="after")
+    def post_validation_check(self) -> "UpdateRecommendation":
+        if self.should_update and self.updated_readme is None:
+            raise ValueError("updated_readme must be provided if should_update is True")
+
+        return self
+
 
 def test_output_validation():
     # importing here because it's a dev dependency
@@ -179,7 +187,7 @@ pipeline = prompt | model.with_structured_output(UpdateRecommendation)
 
 
 def review_pull_request(
-    repo: Repository, pr: PullRequest, tries_remaining=1, feedback: str = None
+    repo: Repository, pr: PullRequest, tries_remaining=0, feedback: str = None
 ) -> UpdateRecommendation:
     try:
         result = pipeline.invoke(
@@ -193,14 +201,8 @@ def review_pull_request(
             }
         )
 
-        # Trigger a retry if the updated README is required but not provided
-        if result.should_update and not result.updated_readme:
-            raise ValueError(
-                "Updated README content is required if should_update is True"
-            )
-
         return result
-    except (ValidationError, ValueError) as e:
+    except ValidationError as e:
         if tries_remaining > 0:
             print("Validation error, trying again")
             return review_pull_request(repo, pr, tries_remaining - 1)
