@@ -10,12 +10,15 @@ This project automatically updates README files based on changes in pull request
 - Provides informative logging output about update actions
 - Option to skip README checks for testing purposes
 - Automatically closes stale README PRs
+- Supports pytest for testing
+- Uses Black for code formatting
 
 ## Prerequisites
 
 - GitHub repository
 - GitHub API token
 - Anthropic API key
+- Python 3.11 or higher
 
 ## Usage
 
@@ -37,31 +40,30 @@ Make sure to set up the `ANTHROPIC_API_KEY` secret in your repository settings. 
 
 To skip the README check for testing purposes, include "NO README REVIEW" in the pull request body. This will cause the action to exit without performing any updates.
 
-## Project Structure
+## Development
+
+### Testing
+
+This project uses pytest for testing. To run the tests, execute the following command:
 
 ```
-.
-├── .github
-│   └── workflows
-│       ├── suggest_readme_updates.yml
-│       ├── close_stale_prs.yml
-│       └── readme_feedback.yml
-├── src
-│   ├── core.py
-│   ├── close_stale_prs.sh
-│   ├── test_github.ipynb
-│   └── test_popular_repos.ipynb
-├── .gitignore
-├── NOTES.md
-├── Pipfile
-├── Pipfile.lock
-├── README.md
-└── action.yml
+pytest
+```
+
+### Code Formatting
+
+We use Black for code formatting. To format your code, run:
+
+```
+black .
 ```
 
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Ensure your code follows the project's coding standards (use Black for formatting).
+2. Update the README if necessary.
 
 ## License
 
