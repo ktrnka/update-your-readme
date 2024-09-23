@@ -32,8 +32,10 @@ def pull_request_to_markdown(pr: PullRequest) -> str:
     return text
 
 
-
-model = ChatAnthropic(model='claude-3-5-sonnet-20240620')
+# model notes
+# What we used before: claude-3-5-sonnet-20240620
+# Fast, cheap: claude-3-haiku-20240307
+model = ChatAnthropic(model='claude-3-haiku-20240307')
 
 class UpdateRecommendation(BaseModel):
     should_update: bool = Field(description="Whether the README should be updated or not")
