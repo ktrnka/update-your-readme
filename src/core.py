@@ -188,7 +188,6 @@ def review_pull_request(
             return review_pull_request(repo, pr, tries_remaining - 1)
         else:
             raise e
-    return result
 
 
 if __name__ == "__main__":
