@@ -16,7 +16,7 @@ load_dotenv()
 github_client = Github(auth=Auth.Token(os.environ["GITHUB_TOKEN"]))
 
 
-def pull_request_to_markdown(pr: PullRequest) -> str:
+def pull_request_to_markdown(pr: PullRequest, excluded_diff_types={"ipynb"}) -> str:
     """
     Format key information from the pull request as markdown suitable for LLM input
     """
@@ -26,7 +26,9 @@ def pull_request_to_markdown(pr: PullRequest) -> str:
 
 """
     for file in pr.get_files():
-        patch = file.patch or "Can't render patch."
+        patch = "Can't render patch."
+        if file.patch and file.filename.split(".")[-1] not in excluded_diff_types:
+            patch = file.patch
         text += f"""## {file.filename}\n{patch}\n\n"""
 
     return text
@@ -147,7 +149,8 @@ Write using clear and concise language to ensure that your README is easily unde
 """
 
 
-prompt = ChatPromptTemplate.from_messages(
+def fill_prompt(readme: str, pull_request_markdown: str, feedback: str) -> ChatPromptTemplate:
+    return ChatPromptTemplate.from_messages(
     [
         SystemMessage(
             content=[
@@ -167,9 +170,9 @@ You'll review a pull request and determine if the README should be updated, then
             ]
         ),
         HumanMessage(
-            content="""
+            content=f"""
 # Existing README from the base branch
-{base_readme}
+{readme}
 
 # Pull request changes
 {pull_request_markdown}
@@ -189,22 +192,29 @@ If the README should be updated, take care to write the updated_readme
     ]
 )
 
-pipeline = prompt | model.with_structured_output(ReadmeRecommendation)
 
 
 def review_pull_request(
     repo: Repository, pr: PullRequest, tries_remaining=0, feedback: str = None
 ) -> ReadmeRecommendation:
+
     try:
-        result = pipeline.invoke(
-            {
-                "base_readme": repo.get_contents(
-                    "README.md", ref=pr.base.sha
-                ).decoded_content.decode(),
-                "pull_request_markdown": pull_request_to_markdown(pr),
-                "feedback": feedback,
-            }
-        )
+        readme = repo.get_contents("README.md", ref=pr.base.sha).decoded_content.decode()
+
+        pipeline = fill_prompt(readme, pull_request_to_markdown(pr), feedback) | model.with_structured_output(ReadmeRecommendation)
+        result = pipeline.invoke({})
+
+        # result = pipeline.invoke(
+        #     {
+        #         # TODO:
+        #         # - Try out the README from the PR branch (If we don't, it may tend to undo any changes made in the PR)
+        #         "readme": repo.get_contents(
+        #             "README.md", ref=pr.base.sha
+        #         ).decoded_content.decode(),
+        #         "pull_request_markdown": pull_request_to_markdown(pr),
+        #         "feedback": feedback,
+        #     }
+        # )
 
         return result
     except ValidationError as e:
