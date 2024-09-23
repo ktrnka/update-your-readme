@@ -37,6 +37,10 @@ def pull_request_to_markdown(pr: PullRequest) -> str:
 # Fast, cheap: claude-3-haiku-20240307
 model = ChatAnthropic(
     model='claude-3-haiku-20240307',
+    # On prompt caching:
+    # https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
+    # https://api.python.langchain.com/en/latest/chat_models/langchain_anthropic.chat_models.ChatAnthropic.html
+    # NOTE: This throws a UserWarning that seems spurious
     extra_headers={"anthropic-beta": "prompt-caching-2024-07-31"}
     )
 
@@ -125,12 +129,15 @@ prompt_v2 = ChatPromptTemplate.from_messages([
     SystemMessage(content=[
         {
             # According to the github issue comments, this cannot have any Langchain prompt variables in it but we can do Python string interpolation
+            # Source: https://github.com/langchain-ai/langchain/discussions/25610
             "text": f"""
 You'll review a pull request and determine if the README should be updated, then suggest appropriate changes.
 
 {readme_guidelines}
 """,
             "type": "text",
+            # This triggers caching for this message AND all messages before it in the pipeline, also including any tool prompts
+            # Source: https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
             "cache_control": {"type": "ephemeral"},
         }
     ]),
