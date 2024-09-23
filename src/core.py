@@ -17,6 +17,8 @@ def repo_contents_to_markdown(repo: Repository, sha: str = "HEAD") -> str:
     markdown = ""
     for content in repo.get_git_tree(sha, recursive=True).tree:
         markdown += f"{content.path}\n"
+    if markdown == "":
+        raise Error("Empty markdown")
     return markdown
 
 def pull_request_to_markdown(pr: PullRequest) -> str:
