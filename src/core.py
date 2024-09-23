@@ -58,6 +58,24 @@ class UpdateRecommendation(BaseModel):
         default=None,
     )
 
+def test_output_validation():
+    # importing here because it's a dev dependency
+    import pytest
+
+    # test that it works normally
+    UpdateRecommendation(should_update=True, reason="test", updated_readme="test")
+
+    # test that it fails with missing fields
+    with pytest.raises(ValidationError):
+        UpdateRecommendation(should_update=True)
+
+    # test that it passes if should_update is False and the updated_readme is missing
+    UpdateRecommendation(should_update=False, reason="test")
+
+    # test that it fails if should_update is True and the updated_readme is missing
+    with pytest.raises(ValidationError):
+        UpdateRecommendation(should_update=True, reason="test")
+
 
 # Copied from https://www.hatica.io/blog/best-practices-for-github-readme/
 readme_guidelines = """
