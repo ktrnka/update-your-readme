@@ -40,31 +40,6 @@ Make sure to set up the `ANTHROPIC_API_KEY` secret in your repository settings. 
 
 To skip the README check for testing purposes, include "NO README REVIEW" in the pull request body. This will cause the action to exit without performing any updates.
 
-## Project Structure
-
-```
-.
-├── .github
-│   └── workflows
-│       ├── suggest_readme_updates.yml
-│       ├── close_stale_prs.yml
-│       └── readme_feedback.yml
-├── src
-│   ├── core.py
-│   ├── close_stale_prs.sh
-│   ├── test_github.ipynb
-│   └── test_popular_repos.ipynb
-├── .gitignore
-├── .vscode
-│   └── settings.json
-├── NOTES.md
-├── Pipfile
-├── Pipfile.lock
-├── README.md
-├── action.yml
-└── pytest.ini
-```
-
 ## Development
 
 ### Testing
@@ -88,8 +63,7 @@ black .
 Contributions are welcome! Please feel free to submit a Pull Request.
 
 1. Ensure your code follows the project's coding standards (use Black for formatting).
-2. Add tests for any new features or bug fixes.
-3. Update the README if necessary.
+2. Update the README if necessary.
 
 ## License
 
