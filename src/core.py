@@ -197,7 +197,7 @@ If the README should be updated, take care to write the updated_readme
 
 
 def review_pull_request(
-    repo: Repository, pr: PullRequest, tries_remaining=0, feedback: str = None
+    repo: Repository, pr: PullRequest, tries_remaining=1, feedback: str = None
 ) -> ReadmeRecommendation:
 
     try:
@@ -212,7 +212,7 @@ def review_pull_request(
 
         return result
     except ValidationError as e:
-        if tries_remaining > 0:
+        if tries_remaining > 1:
             print("Validation error, trying again")
             return review_pull_request(repo, pr, tries_remaining - 1)
         else:
