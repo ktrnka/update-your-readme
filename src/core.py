@@ -11,13 +11,15 @@ from langchain_core.prompts import PromptTemplate, ChatPromptTemplate
 
 load_dotenv()
 
-github_client = Github(auth=Auth.Token(os.environ['GITHUB_TOKEN']))
+github_client = Github(auth=Auth.Token(os.environ["GITHUB_TOKEN"]))
+
 
 def repo_contents_to_markdown(repo: Repository, sha: str = "HEAD") -> str:
     markdown = ""
     for content in repo.get_git_tree(sha, recursive=True).tree:
         markdown += f"{content.path}\n"
     return markdown
+
 
 def pull_request_to_markdown(pr: PullRequest) -> str:
     text = f"""
@@ -36,18 +38,25 @@ def pull_request_to_markdown(pr: PullRequest) -> str:
 # What we used before: claude-3-5-sonnet-20240620
 # Fast, cheap: claude-3-haiku-20240307
 model = ChatAnthropic(
-    model='claude-3-haiku-20240307',
+    model="claude-3-haiku-20240307",
     # On prompt caching:
     # https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
     # https://api.python.langchain.com/en/latest/chat_models/langchain_anthropic.chat_models.ChatAnthropic.html
     # NOTE: This throws a UserWarning that seems spurious
-    extra_headers={"anthropic-beta": "prompt-caching-2024-07-31"}
-    )
+    extra_headers={"anthropic-beta": "prompt-caching-2024-07-31"},
+)
+
 
 class UpdateRecommendation(BaseModel):
-    should_update: bool = Field(description="Whether the README should be updated or not")
+    should_update: bool = Field(
+        description="Whether the README should be updated or not"
+    )
     reason: str = Field(description="Reason for the recommendation")
-    updated_readme: Optional[str] = Field(description="Updated README content, required if should_update is True, otherwise optional", default=None)
+    updated_readme: Optional[str] = Field(
+        description="Updated README content, required if should_update is True, otherwise optional",
+        default=None,
+    )
+
 
 # Copied from https://www.hatica.io/blog/best-practices-for-github-readme/
 readme_guidelines = """
@@ -104,7 +113,8 @@ Write using clear and concise language to ensure that your README is easily unde
 
 """
 
-prompt = PromptTemplate.from_template("""
+prompt = PromptTemplate.from_template(
+    """
 # Existing README
 {readme_content}
 
@@ -121,27 +131,32 @@ B) reason: Why?
 C) updated_readme: The updated README content (if applicable)
 
 If the README should be updated, take care to write teh updated_readme
-""")
+"""
+)
 
 from langchain_core.messages import SystemMessage, HumanMessage
 
-prompt_v2 = ChatPromptTemplate.from_messages([
-    SystemMessage(content=[
-        {
-            # According to the github issue comments, this cannot have any Langchain prompt variables in it but we can do Python string interpolation
-            # Source: https://github.com/langchain-ai/langchain/discussions/25610
-            "text": f"""
+prompt_v2 = ChatPromptTemplate.from_messages(
+    [
+        SystemMessage(
+            content=[
+                {
+                    # According to the github issue comments, this cannot have any Langchain prompt variables in it but we can do Python string interpolation
+                    # Source: https://github.com/langchain-ai/langchain/discussions/25610
+                    "text": f"""
 You'll review a pull request and determine if the README should be updated, then suggest appropriate changes.
 
 {readme_guidelines}
 """,
-            "type": "text",
-            # This triggers caching for this message AND all messages before it in the pipeline, also including any tool prompts
-            # Source: https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
-            "cache_control": {"type": "ephemeral"},
-        }
-    ]),
-    HumanMessage(content="""
+                    "type": "text",
+                    # This triggers caching for this message AND all messages before it in the pipeline, also including any tool prompts
+                    # Source: https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
+                    "cache_control": {"type": "ephemeral"},
+                }
+            ]
+        ),
+        HumanMessage(
+            content="""
 # Existing README
 {readme_content}
 
@@ -158,23 +173,34 @@ B) reason: Why?
 C) updated_readme: The updated README content (if applicable)
 
 If the README should be updated, take care to write teh updated_readme
-""")
-])
+"""
+        ),
+    ]
+)
 
 pipeline = prompt_v2 | model.with_structured_output(UpdateRecommendation)
 
-def review_pull_request(repo: Repository, pr: PullRequest, tries_remaining=1, feedback: str = None) -> UpdateRecommendation:
+
+def review_pull_request(
+    repo: Repository, pr: PullRequest, tries_remaining=1, feedback: str = None
+) -> UpdateRecommendation:
     try:
-        result = pipeline.invoke({
-            "readme_content": repo.get_contents("README.md", ref=pr.base.sha).decoded_content.decode(),
-            "pr_patch": pull_request_to_markdown(pr),
-            "readme_guidelines": readme_guidelines,
-            "feedback": feedback
-        })
+        result = pipeline.invoke(
+            {
+                "readme_content": repo.get_contents(
+                    "README.md", ref=pr.base.sha
+                ).decoded_content.decode(),
+                "pr_patch": pull_request_to_markdown(pr),
+                "readme_guidelines": readme_guidelines,
+                "feedback": feedback,
+            }
+        )
 
         # Trigger a retry if the updated README is required but not provided
         if result.should_update and not result.updated_readme:
-            raise ValueError("Updated README content is required if should_update is True")
+            raise ValueError(
+                "Updated README content is required if should_update is True"
+            )
 
         return result
     except (ValidationError, ValueError) as e:
@@ -184,6 +210,7 @@ def review_pull_request(repo: Repository, pr: PullRequest, tries_remaining=1, fe
         else:
             raise e
     return result
+
 
 if __name__ == "__main__":
     parser = ArgumentParser()
