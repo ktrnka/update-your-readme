@@ -64,6 +64,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 1. Ensure your code follows the project's coding standards (use Black for formatting).
 2. Update the README if necessary.
+3. Add tests for new features or bug fixes.
 
 ## License
 
