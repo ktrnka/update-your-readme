@@ -122,7 +122,7 @@ If the README should be updated, take care to write teh updated_readme
 
 pipeline = prompt | model.with_structured_output(UpdateRecommendation)
 
-def review_pull_request(repo: Repository, pr: PullRequest, tries_remaining=3, feedback: str = None) -> UpdateRecommendation:
+def review_pull_request(repo: Repository, pr: PullRequest, tries_remaining=1, feedback: str = None) -> UpdateRecommendation:
     try:
         result = pipeline.invoke({
             "readme_content": repo.get_contents("README.md", ref=pr.base.sha).decoded_content.decode(),
