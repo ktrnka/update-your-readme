@@ -105,9 +105,6 @@ You'll review a pull request and determine if the README should be updated, then
 # Existing README
 {readme_content}
 
-# File Tree
-{file_tree}
-
 # PR Patch
 {pr_patch}
 
@@ -129,7 +126,6 @@ def review_pull_request(repo: Repository, pr: PullRequest, tries_remaining=3, fe
     try:
         result = pipeline.invoke({
             "readme_content": repo.get_contents("README.md", ref=pr.base.sha).decoded_content.decode(),
-            "file_tree": repo_contents_to_markdown(repo, "HEAD"),
             "pr_patch": pull_request_to_markdown(pr),
             "readme_guidelines": readme_guidelines,
             "feedback": feedback
