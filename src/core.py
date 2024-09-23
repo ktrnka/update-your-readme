@@ -37,20 +37,22 @@ def pull_request_to_markdown(pr: PullRequest, excluded_diff_types={"ipynb"}) -> 
 # model notes
 # What we used before: claude-3-5-sonnet-20240620
 # Fast, cheap: claude-3-haiku-20240307
-with warnings.catch_warnings():
-    # The specific UserWarning we're ignoring is:
-    # UserWarning: WARNING! extra_headers is not default parameter.
-    #             extra_headers was transferred to model_kwargs.
-    #             Please confirm that extra_headers is what you intended.
-    warnings.filterwarnings("ignore", category=UserWarning)
+# with warnings.catch_warnings():
+#     # The specific UserWarning we're ignoring is:
+#     # UserWarning: WARNING! extra_headers is not default parameter.
+#     #             extra_headers was transferred to model_kwargs.
+#     #             Please confirm that extra_headers is what you intended.
+#     warnings.filterwarnings("ignore", category=UserWarning)
 
-    model = ChatAnthropic(
-        model="claude-3-haiku-20240307",
-        # On prompt caching:
-        # https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
-        # https://api.python.langchain.com/en/latest/chat_models/langchain_anthropic.chat_models.ChatAnthropic.html
-        extra_headers={"anthropic-beta": "prompt-caching-2024-07-31"},
-    )
+model = ChatAnthropic(
+    model="claude-3-haiku-20240307",
+    # temperature=0.3,
+    max_tokens=4096,
+    # On prompt caching:
+    # https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
+    # https://api.python.langchain.com/en/latest/chat_models/langchain_anthropic.chat_models.ChatAnthropic.html
+    extra_headers={"anthropic-beta": "prompt-caching-2024-07-31"},
+)
 
 
 class ReadmeRecommendation(BaseModel):
