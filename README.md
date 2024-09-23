@@ -10,12 +10,15 @@ This project automatically updates README files based on changes in pull request
 - Provides informative logging output about update actions
 - Option to skip README checks for testing purposes
 - Automatically closes stale README PRs
+- Supports pytest for testing
+- Uses Black for code formatting
 
 ## Prerequisites
 
 - GitHub repository
 - GitHub API token
 - Anthropic API key
+- Python 3.11 or higher
 
 ## Usage
 
@@ -52,16 +55,41 @@ To skip the README check for testing purposes, include "NO README REVIEW" in the
 │   ├── test_github.ipynb
 │   └── test_popular_repos.ipynb
 ├── .gitignore
+├── .vscode
+│   └── settings.json
 ├── NOTES.md
 ├── Pipfile
 ├── Pipfile.lock
 ├── README.md
-└── action.yml
+├── action.yml
+└── pytest.ini
+```
+
+## Development
+
+### Testing
+
+This project uses pytest for testing. To run the tests, execute the following command:
+
+```
+pytest
+```
+
+### Code Formatting
+
+We use Black for code formatting. To format your code, run:
+
+```
+black .
 ```
 
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Ensure your code follows the project's coding standards (use Black for formatting).
+2. Add tests for any new features or bug fixes.
+3. Update the README if necessary.
 
 ## License
 
