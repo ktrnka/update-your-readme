@@ -57,6 +57,7 @@ class ReadmeRecommendation(BaseModel):
     """
     Structured output for the README review task
     """
+
     should_update: bool = Field(
         description="Whether the README should be updated or not"
     )
@@ -149,28 +150,30 @@ Write using clear and concise language to ensure that your README is easily unde
 """
 
 
-def fill_prompt(readme: str, pull_request_markdown: str, feedback: str) -> ChatPromptTemplate:
+def fill_prompt(
+    readme: str, pull_request_markdown: str, feedback: str
+) -> ChatPromptTemplate:
     return ChatPromptTemplate.from_messages(
-    [
-        SystemMessage(
-            content=[
-                {
-                    "type": "text",
-                    # This triggers caching for this message AND all messages before it in the pipeline, also including any tool prompts
-                    # Source: https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
-                    "cache_control": {"type": "ephemeral"},
-                    # If we want prompt caching, this can't have any Langchain prompt variables in it
-                    # Source: https://github.com/langchain-ai/langchain/discussions/25610
-                    "text": f"""
+        [
+            SystemMessage(
+                content=[
+                    {
+                        "type": "text",
+                        # This triggers caching for this message AND all messages before it in the pipeline, also including any tool prompts
+                        # Source: https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
+                        "cache_control": {"type": "ephemeral"},
+                        # If we want prompt caching, this can't have any Langchain prompt variables in it
+                        # Source: https://github.com/langchain-ai/langchain/discussions/25610
+                        "text": f"""
 You'll review a pull request and determine if the README should be updated, then suggest appropriate changes.
 
 {readme_guidelines}
 """,
-                }
-            ]
-        ),
-        HumanMessage(
-            content=f"""
+                    }
+                ]
+            ),
+            HumanMessage(
+                content=f"""
 # Existing README from the base branch
 {readme}
 
@@ -188,10 +191,9 @@ C) updated_readme: The updated README content (if applicable)
 
 If the README should be updated, take care to write the updated_readme
 """
-        ),
-    ]
-)
-
+            ),
+        ]
+    )
 
 
 def review_pull_request(
@@ -199,22 +201,14 @@ def review_pull_request(
 ) -> ReadmeRecommendation:
 
     try:
-        readme = repo.get_contents("README.md", ref=pr.base.sha).decoded_content.decode()
+        readme = repo.get_contents(
+            "README.md", ref=pr.base.sha
+        ).decoded_content.decode()
 
-        pipeline = fill_prompt(readme, pull_request_to_markdown(pr), feedback) | model.with_structured_output(ReadmeRecommendation)
+        pipeline = fill_prompt(
+            readme, pull_request_to_markdown(pr), feedback
+        ) | model.with_structured_output(ReadmeRecommendation)
         result = pipeline.invoke({})
-
-        # result = pipeline.invoke(
-        #     {
-        #         # TODO:
-        #         # - Try out the README from the PR branch (If we don't, it may tend to undo any changes made in the PR)
-        #         "readme": repo.get_contents(
-        #             "README.md", ref=pr.base.sha
-        #         ).decoded_content.decode(),
-        #         "pull_request_markdown": pull_request_to_markdown(pr),
-        #         "feedback": feedback,
-        #     }
-        # )
 
         return result
     except ValidationError as e:
