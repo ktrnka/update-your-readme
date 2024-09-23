@@ -15,6 +15,7 @@ pydantic = "*"
 pytest = "*"
 jupyter = "*"
 ipykernel = "*"
+black = "*"
 
 [requires]
 python_version = "3.11"
