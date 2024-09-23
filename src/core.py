@@ -4,7 +4,7 @@ import os
 import sys
 from argparse import ArgumentParser
 from dotenv import load_dotenv
-from pydantic import BaseModel, Field, ValidationError, model_validator, root_validator
+from pydantic import BaseModel, Field, ValidationError, model_validator
 from typing import Optional
 from langchain_anthropic import ChatAnthropic
 from langchain_core.prompts import ChatPromptTemplate
@@ -16,16 +16,12 @@ load_dotenv()
 github_client = Github(auth=Auth.Token(os.environ["GITHUB_TOKEN"]))
 
 
-def repo_contents_to_markdown(repo: Repository, sha: str = "HEAD") -> str:
-    markdown = ""
-    for content in repo.get_git_tree(sha, recursive=True).tree:
-        markdown += f"{content.path}\n"
-    return markdown
-
-
 def pull_request_to_markdown(pr: PullRequest) -> str:
+    """
+    Format key information from the pull request as markdown suitable for LLM input
+    """
     text = f"""
-# [{pr.title}]){pr.html_url}
+## [{pr.title}]){pr.html_url}
 {pr.body or 'No description provided.'}
 
 """
@@ -55,7 +51,10 @@ with warnings.catch_warnings():
     )
 
 
-class UpdateRecommendation(BaseModel):
+class ReadmeRecommendation(BaseModel):
+    """
+    Structured output for the README review task
+    """
     should_update: bool = Field(
         description="Whether the README should be updated or not"
     )
@@ -66,7 +65,7 @@ class UpdateRecommendation(BaseModel):
     )
 
     @model_validator(mode="after")
-    def post_validation_check(self) -> "UpdateRecommendation":
+    def post_validation_check(self) -> "ReadmeRecommendation":
         if self.should_update and self.updated_readme is None:
             raise ValueError("updated_readme must be provided if should_update is True")
 
@@ -78,18 +77,18 @@ def test_output_validation():
     import pytest
 
     # test that it works normally
-    UpdateRecommendation(should_update=True, reason="test", updated_readme="test")
+    ReadmeRecommendation(should_update=True, reason="test", updated_readme="test")
 
     # test that it fails with missing fields
     with pytest.raises(ValidationError):
-        UpdateRecommendation(should_update=True)
+        ReadmeRecommendation(should_update=True)
 
     # test that it passes if should_update is False and the updated_readme is missing
-    UpdateRecommendation(should_update=False, reason="test")
+    ReadmeRecommendation(should_update=False, reason="test")
 
     # test that it fails if should_update is True and the updated_readme is missing
     with pytest.raises(ValidationError):
-        UpdateRecommendation(should_update=True, reason="test")
+        ReadmeRecommendation(should_update=True, reason="test")
 
 
 # Copied from https://www.hatica.io/blog/best-practices-for-github-readme/
@@ -153,29 +152,29 @@ prompt = ChatPromptTemplate.from_messages(
         SystemMessage(
             content=[
                 {
-                    # According to the github issue comments, this cannot have any Langchain prompt variables in it but we can do Python string interpolation
+                    "type": "text",
+                    # This triggers caching for this message AND all messages before it in the pipeline, also including any tool prompts
+                    # Source: https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
+                    "cache_control": {"type": "ephemeral"},
+                    # If we want prompt caching, this can't have any Langchain prompt variables in it
                     # Source: https://github.com/langchain-ai/langchain/discussions/25610
                     "text": f"""
 You'll review a pull request and determine if the README should be updated, then suggest appropriate changes.
 
 {readme_guidelines}
 """,
-                    "type": "text",
-                    # This triggers caching for this message AND all messages before it in the pipeline, also including any tool prompts
-                    # Source: https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
-                    "cache_control": {"type": "ephemeral"},
                 }
             ]
         ),
         HumanMessage(
             content="""
-# Existing README
-{readme_content}
+# Existing README from the base branch
+{base_readme}
 
-# PR Patch
-{pr_patch}
+# Pull request changes
+{pull_request_markdown}
 
-# User Feedback
+# Optional User Feedback about README updates
 {feedback}
 
 # Task
@@ -184,26 +183,25 @@ A) should_update: Should the README be updated?
 B) reason: Why?
 C) updated_readme: The updated README content (if applicable)
 
-If the README should be updated, take care to write teh updated_readme
+If the README should be updated, take care to write the updated_readme
 """
         ),
     ]
 )
 
-pipeline = prompt | model.with_structured_output(UpdateRecommendation)
+pipeline = prompt | model.with_structured_output(ReadmeRecommendation)
 
 
 def review_pull_request(
     repo: Repository, pr: PullRequest, tries_remaining=0, feedback: str = None
-) -> UpdateRecommendation:
+) -> ReadmeRecommendation:
     try:
         result = pipeline.invoke(
             {
-                "readme_content": repo.get_contents(
+                "base_readme": repo.get_contents(
                     "README.md", ref=pr.base.sha
                 ).decoded_content.decode(),
-                "pr_patch": pull_request_to_markdown(pr),
-                "readme_guidelines": readme_guidelines,
+                "pull_request_markdown": pull_request_to_markdown(pr),
                 "feedback": feedback,
             }
         )
