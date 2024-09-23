@@ -45,7 +45,7 @@ def pull_request_to_markdown(pr: PullRequest, excluded_diff_types={"ipynb"}) -> 
 #     warnings.filterwarnings("ignore", category=UserWarning)
 
 model = ChatAnthropic(
-    model="claude-3-haiku-20240307",
+    model="claude-3-5-sonnet-20240620",
     # temperature=0.3,
     max_tokens=4096,
     # On prompt caching:
