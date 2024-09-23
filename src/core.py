@@ -6,7 +6,8 @@ from dotenv import load_dotenv
 from pydantic import BaseModel, Field, ValidationError
 from typing import Optional
 from langchain_anthropic import ChatAnthropic
-from langchain_core.prompts import PromptTemplate, ChatPromptTemplate
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.messages import SystemMessage, HumanMessage
 
 
 load_dotenv()
@@ -113,30 +114,8 @@ Write using clear and concise language to ensure that your README is easily unde
 
 """
 
-prompt = PromptTemplate.from_template(
-    """
-# Existing README
-{readme_content}
 
-# PR Patch
-{pr_patch}
-
-# User Feedback
-{feedback}
-
-# Task
-Based on the above information, please provide a structured output indicating:
-A) should_update: Should the README be updated?
-B) reason: Why?
-C) updated_readme: The updated README content (if applicable)
-
-If the README should be updated, take care to write teh updated_readme
-"""
-)
-
-from langchain_core.messages import SystemMessage, HumanMessage
-
-prompt_v2 = ChatPromptTemplate.from_messages(
+prompt = ChatPromptTemplate.from_messages(
     [
         SystemMessage(
             content=[
@@ -178,7 +157,7 @@ If the README should be updated, take care to write teh updated_readme
     ]
 )
 
-pipeline = prompt_v2 | model.with_structured_output(UpdateRecommendation)
+pipeline = prompt | model.with_structured_output(UpdateRecommendation)
 
 
 def review_pull_request(
