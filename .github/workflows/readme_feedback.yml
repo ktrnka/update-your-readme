@@ -12,9 +12,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # - name: Exit if PR ref starts with update-your-readme
-      #   if: !startsWith(github.event.pull_request.head.ref, 'update-your-readme')
-      #   run: echo "PR ref starts with update-your-readme, exiting." && exit 0
+      - name: Check that it's a bot PR
+        if: ! startsWith(github.event.issue.title, '[Bot] README')
+        run: echo "The comment isn't on a readme-bot PR, exiting." && exit 0
+
+      - name: Find original PR
+        shell: bash
+        id: original-pr
+        run: |
+          ORIGINAL_PR=$(echo "${{ github.event.issue.title }}" | rev | cut -d" " -f1 | rev)
+          echo "num=$ORIGINAL_PR" >> $GITHUB_OUTPUT
+          ORIGINAL_PR_BRANCH=$(gh pr view $ORIGINAL_PR --json headRefName -q '.headRefName')
+          echo "branch=$ORIGINAL_PR_BRANCH" >> $GITHUB_OUTPUT
+          echo "num=$ORIGINAL_PR"
+          echo "branch=$ORIGINAL_PR_BRANCH"
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -26,15 +37,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install pipenv
           pipenv install
-
-      - name: Extract original PR
-        shell: bash
-        id: original-pr
-        run: |
-          ORIGINAL_PR=$(echo "${{ github.event.issue.title }}" | rev | cut -d" " -f1 | rev)
-          echo "num=$ORIGINAL_PR" >> $GITHUB_OUTPUT
-          ORIGINAL_PR_BRANCH=$(gh pr view $ORIGINAL_PR --json headRefName -q '.headRefName')
-          echo "branch=$ORIGINAL_PR_BRANCH" >> $GITHUB_OUTPUT
 
       - name: Update README
         id: update-readme
