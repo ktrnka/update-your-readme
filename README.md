@@ -7,6 +7,8 @@ This project automatically updates README files based on changes in pull request
 - Suggests README updates based on 1) the pull request description 2) the code changes in the PR
 - Uses LangChain and Anthropic's Claude model for intelligent suggestions
 - Option to skip README checks for testing purposes
+- Improved feedback handling for README updates
+- Automatic closure of stale README PRs
 
 Currently only available for developers of this repo:
 - If you comment on a README PR, it will regenerate the README using your feedback
@@ -72,7 +74,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 This project includes GitHub Actions workflows that enhance the README update process:
 
 1. **Suggest README Updates**: Defined in `.github/workflows/suggest_readme_updates.yml`, this workflow:
-   - Uses the `ktrnka/update-your-readme@actions-iteration-speed` action
+   - Uses the `ktrnka/update-your-readme@main` action
    - Runs the README update process
    - Creates a new pull request with the suggested changes
    - Adds a comment to the original pull request with a link to the suggested changes
@@ -83,8 +85,12 @@ This project includes GitHub Actions workflows that enhance the README update pr
 
 3. **README Feedback**: Defined in `.github/workflows/readme_feedback.yml`, this workflow:
    - Handles feedback on README updates
+   - Checks if the comment is on a bot-generated README PR
+   - Finds the original PR that triggered the README update
+   - Generates a new README based on the feedback
+   - Comments on the current PR with the update status and reason
 
-To use these features, ensure that your repository has the necessary secrets set up (`ANTHROPIC_API_KEY`).
+To use these features, ensure that your repository has the necessary secrets set up (`ANTHROPIC_API_KEY` and `GITHUB_TOKEN`).
 
 ### Debugging
 
