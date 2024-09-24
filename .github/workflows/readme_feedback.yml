@@ -10,25 +10,29 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
-      - uses: actions/checkout@v4
-
       - name: Check that it's a bot PR
         if: ${{!startsWith(github.event.issue.title, '[Bot] README')}}
         run: echo "The comment isn't on a readme-bot PR, exiting." && exit 0
 
-      - name: Find original PR
+      - name: Find PR nums and branches
         shell: bash
-        id: original-pr
+        id: prs
         env:
           # for gh cli
           GH_TOKEN: ${{ github.token }}
         run: |
           ORIGINAL_PR=$(echo "${{ github.event.issue.title }}" | rev | cut -d" " -f1 | rev)
-          echo "num=$ORIGINAL_PR" >> $GITHUB_OUTPUT
+          echo "original_num=$ORIGINAL_PR" >> $GITHUB_OUTPUT
           ORIGINAL_PR_BRANCH=$(gh pr view $ORIGINAL_PR --json headRefName -q '.headRefName')
-          echo "branch=$ORIGINAL_PR_BRANCH" >> $GITHUB_OUTPUT
-          echo "num=$ORIGINAL_PR"
-          echo "branch=$ORIGINAL_PR_BRANCH"
+          echo "original_branch=$ORIGINAL_PR_BRANCH" >> $GITHUB_OUTPUT
+          PR_BRANCH=$(gh pr view ${{ github.event.issue.number }} --json headRefName -q '.headRefName')
+          echo "branch=$PR_BRANCH" >> $GITHUB_OUTPUT
+          echo "original_num=$ORIGINAL_PR"
+          echo "original_branch=$ORIGINAL_PR_BRANCH"
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.prs.outputs.branch }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -47,7 +51,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          pipenv run python src/core.py --repository ${{ github.repository }} --pr ${{ steps.original-pr.outputs.num }} --readme README.md --feedback "${{ github.event.comment.body }}" --output-format github >> $GITHUB_OUTPUT
+          pipenv run python src/core.py --repository ${{ github.repository }} --pr ${{ steps.prs.outputs.original_num }} --readme README.md --feedback "${{ github.event.comment.body }}" --output-format github >> $GITHUB_OUTPUT
           cat $GITHUB_OUTPUT
 
       - name: Create comment
@@ -72,7 +76,7 @@ jobs:
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Incorporate feedback from comment ${{ github.event.comment.html_url }}"
-          branch: "update-your-readme-${{ steps.original-pr.outputs.num }}"
+          # branch: "update-your-readme-${{ steps.original-pr.outputs.num }}"
 
 
       # - name: Update Pull Request
