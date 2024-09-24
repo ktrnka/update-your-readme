@@ -40,6 +40,17 @@ To skip the README check for testing purposes, include "NO README REVIEW" in the
 
 ## Development
 
+### Dependencies
+
+This project uses Pipenv for dependency management. The main dependencies are:
+
+- PyGithub
+- python-dotenv
+- langchain
+- langchain-anthropic
+
+Note: The 'requests' library is no longer a direct dependency of this project.
+
 ### Testing
 
 This project uses pytest for testing. To run the tests, execute the following command:
