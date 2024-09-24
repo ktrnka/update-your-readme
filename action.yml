@@ -9,14 +9,14 @@ inputs:
   anthropic-api-key:
     description: 'Anthropic API Key (we use their LLM APIs to generate the README updates).'
     required: true
-  # TODO: This should be inferred from the github context
-  repository:
-    description: 'The repository where the pull request was opened.'
-    required: true
-  # TODO: This should be inferred from the github context
-  pull-request-number:
-    description: 'The number of the pull request to process.'
-    required: true
+  # # TODO: This should be inferred from the github context
+  # repository:
+  #   description: 'The repository where the pull request was opened.'
+  #   required: true
+  # # TODO: This should be inferred from the github context
+  # pull-request-number:
+  #   description: 'The number of the pull request to process.'
+  #   required: true
   readme-file:
     description: 'The path to the README file to update.'
     required: false
@@ -41,9 +41,9 @@ runs:
     - name: Show non-secret inputs
       shell: bash
       run: |
-        echo "Repository: ${{ inputs.repository }}"
-        echo "Pull Request Number: ${{ inputs.pull-request-number }}"
-        echo "Readme File: ${{ inputs.readme-file }}"
+        echo "Repository: ${{ github.repository }}"
+        echo "Pull Request Number: ${{ github.event.pull_request.number }}"
+        echo "README File: ${{ inputs.readme-file }}"
 
     # Show the key paths from the context
     - name: Show context paths
@@ -73,8 +73,8 @@ runs:
       shell: bash
       run: |
         pipenv run python src/core.py \
-        --repository ${{ inputs.repository }} \
-        --pr ${{ inputs.pull-request-number }} \
+        --repository ${{ github.repository }} \
+        --pr ${{ github.event.pull_request.number }} \
         --readme ${{ github.workspace }}/${{ inputs.readme-file }}
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
