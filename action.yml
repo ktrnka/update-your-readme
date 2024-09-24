@@ -48,6 +48,13 @@ runs:
         echo "Repository path: ${{ github.workspace }}"
         echo "Action path": ${{ github.action_path }}
 
+    # Fail fast if the API key is empty
+    - name: Check API Key
+      if: ${{ inputs.anthropic-api-key == '' }}
+      run: |
+        echo "Error: anthropic-api-key is required."
+        exit 1
+
     # Set up Python environment
     - name: Set up Python
       uses: actions/setup-python@v5
