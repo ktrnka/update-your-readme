@@ -246,9 +246,9 @@ def review_pull_request(
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("--repository", "-r", type=str, help="Repository name")
-    parser.add_argument("--readme", type=str, help="README file")
-    parser.add_argument("--pr", type=int, help="Pull request number")
+    parser.add_argument("--repository", "-r", type=str, required=True, help="Repository name")
+    parser.add_argument("--readme", type=str, required=True, help="README file")
+    parser.add_argument("--pr", type=int, required=True, help="Pull request number")
     parser.add_argument("--feedback", type=str, help="User feedback for LLM")
     parser.add_argument(
         "--output-format",
