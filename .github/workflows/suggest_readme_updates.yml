@@ -9,8 +9,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       # Note: This points to the latest version on main; users should pull a tagged version instead
       # When doing development on a branch, point to the branch
