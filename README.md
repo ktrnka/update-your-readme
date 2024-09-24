@@ -72,7 +72,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 This project includes GitHub Actions workflows that enhance the README update process:
 
 1. **Suggest README Updates**: Defined in `.github/workflows/suggest_readme_updates.yml`, this workflow:
-   - Uses the `ktrnka/update-your-readme@actions-iteration-speed` action
+   - Uses the `ktrnka/update-your-readme@main` action (now updated to use the main branch)
    - Runs the README update process
    - Creates a new pull request with the suggested changes
    - Adds a comment to the original pull request with a link to the suggested changes
@@ -83,9 +83,15 @@ This project includes GitHub Actions workflows that enhance the README update pr
 
 3. **README Feedback**: Defined in `.github/workflows/readme_feedback.yml`, this workflow:
    - Handles feedback on README updates
+   - Now correctly identifies the original PR number and branch
+   - Adds a comment to the current PR with update information and reasons
 
 To use these features, ensure that your repository has the necessary secrets set up (`ANTHROPIC_API_KEY`).
 
 ### Debugging
 
 The action supports a `debug` input, which can be set to "true" to enable additional debugging information. This can be helpful when troubleshooting issues with the action.
+
+### Important Notes
+
+- When triggered by a comment, Github Actions will run the workflow on the main branch, not the PR branch. This behavior is now properly handled in the feedback workflow.
