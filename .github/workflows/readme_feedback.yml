@@ -68,10 +68,11 @@ jobs:
       - name: Show git status
         run: git status
 
-      # Commit all changed files back to the repository
+      # Commit the readme back to the PR branch
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Incorporate feedback from comment ${{ github.event.comment.html_url }}"
+          branch: "update-your-readme-${{ steps.original-pr.outputs.num }}"
 
 
       # - name: Update Pull Request
