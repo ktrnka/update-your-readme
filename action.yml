@@ -3,20 +3,9 @@ description: 'Automatically suggest updates to your README based on pull request
 author: 'Keith and Lara'
 
 inputs:
-  # github-token:
-  #   description: 'GitHub Token to authenticate the action.'
-  #   required: true
   anthropic-api-key:
     description: 'Anthropic API Key (we use their LLM APIs to generate the README updates).'
     required: true
-  # # TODO: This should be inferred from the github context
-  # repository:
-  #   description: 'The repository where the pull request was opened.'
-  #   required: true
-  # # TODO: This should be inferred from the github context
-  # pull-request-number:
-  #   description: 'The number of the pull request to process.'
-  #   required: true
   readme-file:
     description: 'The path to the README file to update.'
     required: true

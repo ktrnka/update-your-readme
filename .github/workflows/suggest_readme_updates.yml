@@ -16,8 +16,5 @@ jobs:
       # The "uses" field doesn't support variables, so we can't use the branch name dynamically
       - uses: ktrnka/update-your-readme@actions-iteration-speed
         with:
-          # github-token: ${{ secrets.GITHUB_TOKEN }}
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
-          # repository: ${{ github.repository }}
-          # pull-request-number: ${{ github.event.pull_request.number }}
           readme-file: README.md
