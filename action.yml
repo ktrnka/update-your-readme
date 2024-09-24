@@ -37,26 +37,30 @@ runs:
         pwd
         ls -F
 
-    - name: Show github context object
+    # Note: This object is too big and it get clipped in the logs
+    # - name: Show github context object
+    #   shell: bash
+    #   run: |
+    #     cat << OBJECT
+    #     ${{ toJson(github) }}
+    #     OBJECT
+
+    # Echo some key context variables
+    - name: Show inputs
       shell: bash
       run: |
-        cat << OBJECT
-        ${{ toJson(github) }}
-        OBJECT
+        echo "Repository: ${{ inputs.repository }}"
+        echo "Pull Request Number: ${{ inputs.pull-request-number }}"
+        echo "Readme File: ${{ inputs.readme-file }}"
+        echo "GitHub Token: ${{ inputs.github-token }}"
+        echo "Anthropic API Key: ${{ inputs.anthropic-api-key }}"
 
-    # Checkout the repository (TODO: Use the version pinned in the workflow)
-    # - name: Check out ktrnka/update-your-readme
-    #   uses: actions/checkout@v4
-    #   with:
-    #     repository: ktrnka/update-your-readme
-    #     path: ktrnka/update-your-readme
-
-    # Note: It's already checked out into ${{ github.action_path }}
-
-    # Change directory to the cloned repository
-    # - name: Change directory
-    #   shell: bash
-    #   run: cd ktrnka/update-your-readme
+    # Show the key paths from the context
+    - name: Show context paths
+      shell: bash
+      run: |
+        echo "Repository path: ${{ github.workspace }}"
+        echo "Action path": ${{ github.action_path }}
 
     # Set up Python environment
     - name: Set up Python
@@ -74,7 +78,6 @@ runs:
         pipenv install
 
     # Run the core logic to update the README
-    # NOTE: Beware the ../..
     - name: Update README
       working-directory: ${{ github.action_path }}
       shell: bash
