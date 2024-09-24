@@ -8,9 +8,9 @@ on:
 jobs:
   close-prs:
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
-      - name: Check out the code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Close dependent README PRs
         env:

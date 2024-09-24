@@ -7,17 +7,15 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    continue-on-error: true
     steps:
-      - name: Check out ktrnka/update-your-readme
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       # Note: This points to the latest version on main; users should pull a tagged version instead
       # When doing development on a branch, point to the branch
-      - uses: ktrnka/update-your-readme@main
+      # The "uses" field doesn't support variables, so we can't use the branch name dynamically
+      - uses: ktrnka/update-your-readme@actions-iteration-speed
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
-          repository: ${{ github.repository }}
-          pull-request-number: ${{ github.event.pull_request.number }}
           readme-file: README.md
+          debug: "true"
