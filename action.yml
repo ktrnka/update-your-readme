@@ -37,23 +37,13 @@ runs:
         pwd
         ls -F
 
-    # Note: This object is too big and it get clipped in the logs
-    # - name: Show github context object
-    #   shell: bash
-    #   run: |
-    #     cat << OBJECT
-    #     ${{ toJson(github) }}
-    #     OBJECT
-
     # Echo some key context variables
-    - name: Show inputs
+    - name: Show non-secret inputs
       shell: bash
       run: |
         echo "Repository: ${{ inputs.repository }}"
         echo "Pull Request Number: ${{ inputs.pull-request-number }}"
         echo "Readme File: ${{ inputs.readme-file }}"
-        echo "GitHub Token: ${{ inputs.github-token }}"
-        echo "Anthropic API Key: ${{ inputs.anthropic-api-key }}"
 
     # Show the key paths from the context
     - name: Show context paths
