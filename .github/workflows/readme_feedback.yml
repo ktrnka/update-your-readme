@@ -19,6 +19,9 @@ jobs:
       - name: Find original PR
         shell: bash
         id: original-pr
+        env:
+          # for gh cli
+          GH_TOKEN: ${{ github.token }}
         run: |
           ORIGINAL_PR=$(echo "${{ github.event.issue.title }}" | rev | cut -d" " -f1 | rev)
           echo "num=$ORIGINAL_PR" >> $GITHUB_OUTPUT
