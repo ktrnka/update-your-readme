@@ -19,7 +19,7 @@ inputs:
   #   required: true
   readme-file:
     description: 'The path to the README file to update.'
-    required: false
+    required: true
     default: 'README.md'
 
 runs:
