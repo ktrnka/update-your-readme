@@ -55,6 +55,19 @@ with warnings.catch_warnings():
         extra_headers={"anthropic-beta": "prompt-caching-2024-07-31"},
     )
 
+def gha_escape(s: str) -> str:
+    """
+    Escape a string for use in GitHub Actions outputs.
+    Reference: https://github.com/orgs/community/discussions/26736#discussioncomment-3253165
+    """
+    return s.replace("%", "%25").replace("\n", "%0A").replace("\r", "%0D")
+
+def test_gha_escape():
+    assert gha_escape("test") == "test"
+    assert gha_escape("test\n") == "test%0A"
+    assert gha_escape("test\r") == "test%0D"
+    assert gha_escape("test%") == "test%25"
+    assert gha_escape("test\n\r%") == "test%0A%0D%25"
 
 class ReadmeRecommendation(BaseModel):
     """
@@ -76,6 +89,12 @@ class ReadmeRecommendation(BaseModel):
             raise ValueError("updated_readme must be provided if should_update is True")
 
         return self
+
+    def to_github_actions_outputs(self):
+        return f"""
+should_update={self.should_update}
+reason={gha_escape(self.reason)}
+"""
 
 
 def test_output_validation():
@@ -228,6 +247,7 @@ if __name__ == "__main__":
     parser.add_argument("--readme", type=str, help="README file")
     parser.add_argument("--pr", type=int, help="Pull request number")
     parser.add_argument("--feedback", type=str, help="User feedback for LLM")
+    parser.add_argument("--output-format", type=str, default="json", choices=["json", "github"], help="Output format")
 
     args = parser.parse_args()
 
@@ -236,13 +256,20 @@ if __name__ == "__main__":
 
     if pr.body and "NO README REVIEW" in pr.body:
         print("Skipping README check")
-        sys.exit(0)
 
-    result = review_pull_request(repo, pr, feedback=args.feedback)
-
-    if result.should_update and result.updated_readme:
-        print(f"Updating README with suggested changes: {result.reason}")
-        with open(args.readme, "w") as f:
-            f.write(result.updated_readme)
+        # Setup the result so the output is consistent
+        result = ReadmeRecommendation(should_update=False, reason="'NO README REVIEW' in PR body")
     else:
-        print(f"No updates suggested: {result.reason}")
+        result = review_pull_request(repo, pr, feedback=args.feedback)
+
+        if result.should_update and result.updated_readme:
+            # print(f"Updating README with suggested changes: {result.reason}")
+            with open(args.readme, "w") as f:
+                f.write(result.updated_readme)
+        # else:
+        #     print(f"No updates suggested: {result.reason}")
+
+    if args.output_format == "github":
+        print(result.to_github_actions_outputs())
+    else:
+        print(result.model_dump_json())
