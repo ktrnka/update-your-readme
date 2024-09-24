@@ -18,3 +18,4 @@ jobs:
         with:
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           readme-file: README.md
+          debug: "true"

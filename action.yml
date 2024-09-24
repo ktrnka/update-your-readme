@@ -10,12 +10,17 @@ inputs:
     description: 'The path to the README file to update.'
     required: true
     default: 'README.md'
+  debug:
+    description: 'Enable debug mode.'
+    required: false
+    default: 'false'
 
 runs:
   using: "composite"
   steps:
     # Print the current directory and list files
     - name: Show file system
+      if: inputs.debug != 'false'
       shell: bash
       run: |
         echo "Current directory"
@@ -28,6 +33,7 @@ runs:
 
     # Echo some key context variables
     - name: Show non-secret inputs
+      if: inputs.debug != 'false'
       shell: bash
       run: |
         echo "Repository: ${{ github.repository }}"
@@ -36,6 +42,7 @@ runs:
 
     # Show the key paths from the context
     - name: Show context paths
+      if: inputs.debug != 'false'
       shell: bash
       run: |
         echo "Repository path: ${{ github.workspace }}"
