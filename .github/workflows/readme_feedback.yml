@@ -58,9 +58,11 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           issue-number: ${{ github.event.issue.number }}
           body: |
-            Updating using feedback from ${{ github.event.comment.id }}.
+            Feedback: 
+            ${{ github.event.comment.body }}
+            ${{ github.event.comment.html_url }}
 
-            Reason:
+            Updated README rationale:
             ${{ steps.update-readme.outputs.reason }}
       # - name: Extract branch name
       #   shell: bash
