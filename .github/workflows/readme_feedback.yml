@@ -63,6 +63,10 @@ jobs:
 
             Updated README rationale:
             ${{ steps.update-readme.outputs.reason }}
+      
+      # Show git status for debugging
+      - name: Show git status
+        run: git status
 
       # Commit all changed files back to the repository
       - uses: stefanzweifel/git-auto-commit-action@v5
