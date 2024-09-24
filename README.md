@@ -89,3 +89,14 @@ To use these features, ensure that your repository has the necessary secrets set
 ### Debugging
 
 The action supports a `debug` input, which can be set to "true" to enable additional debugging information. This can be helpful when troubleshooting issues with the action.
+
+### Dependencies
+
+This project uses the following main dependencies:
+
+- PyGithub
+- python-dotenv
+- langchain
+- langchain-anthropic
+
+Note: The 'requests' package has been removed from the project dependencies.
