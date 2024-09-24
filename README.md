@@ -16,7 +16,6 @@ This project automatically updates README files based on changes in pull request
 ## Prerequisites
 
 - GitHub repository
-- GitHub API token
 - Anthropic API key
 - Python 3.11 or higher
 
@@ -27,14 +26,13 @@ To use this action in your GitHub workflow, add the following step to your `.git
 ```yaml
 - uses: ktrnka/update-your-readme@v1
   with:
-    github-token: ${{ secrets.GITHUB_TOKEN }}
     anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
-    repository: ${{ github.repository }}
-    pull-request-number: ${{ github.event.pull_request.number }}
     readme-file: README.md
 ```
 
 Make sure to set up the `ANTHROPIC_API_KEY` secret in your repository settings. Under your repo settings, under Actions > General be sure to check "Allow GitHub Actions to create and approve pull requests" and allow read/write from Github Actions.
+
+Note: The `github-token`, `repository`, and `pull-request-number` inputs are no longer required as they are inferred from the GitHub context.
 
 ### Skipping README Check
 
@@ -74,7 +72,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 This project includes GitHub Actions workflows that enhance the README update process:
 
 1. **Suggest README Updates**: Defined in `.github/workflows/suggest_readme_updates.yml`, this workflow:
-   - Uses the `ktrnka/update-your-readme@use_marketplace_action` action
+   - Uses the `ktrnka/update-your-readme@actions-iteration-speed` action (Note: This is currently set to a development branch; users should use a tagged version)
    - Runs the README update process
    - Creates a new pull request with the suggested changes
    - Adds a comment to the original pull request with a link to the suggested changes
@@ -86,7 +84,7 @@ This project includes GitHub Actions workflows that enhance the README update pr
 3. **README Feedback**: Defined in `.github/workflows/readme_feedback.yml`, this workflow:
    - Handles feedback on README updates
 
-To use these features, ensure that your repository has the necessary secrets set up (`GITHUB_TOKEN` and `ANTHROPIC_API_KEY`).
+To use these features, ensure that your repository has the necessary secrets set up (`ANTHROPIC_API_KEY`).
 
 ### Closing Stale README PRs
 
