@@ -1,5 +1,7 @@
 name: Feedback for LLM-generated README updates
 
+# Developer note: When triggered by a comment, Github Actions will run the workflow on main, not the PR branch
+
 on:
   issue_comment:
 
@@ -25,20 +27,36 @@ jobs:
           pip install pipenv
           pipenv install
 
-      - name: Extract original pr
+      - name: Extract original PR
         shell: bash
         id: original-pr
         run: |
           ORIGINAL_PR=$(echo "${{ github.event.pull_request.head.ref }}" | rev | cut -d"-" -f1 | rev)
           echo "num=$ORIGINAL_PR" >> $GITHUB_OUTPUT
-          
+          ORIGINAL_PR_BRANCH=$(gh pr view $ORIGINAL_PR --json headRefName -q '.headRefName')
+          echo "branch=$ORIGINAL_PR_BRANCH" >> $GITHUB_OUTPUT
+
       - name: Update README
+        id: update-readme
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           pipenv run python src/core.py --repository ${GITHUB_REPOSITORY} --pr ${{ steps.original-pr.outputs.num }} --readme README.md --feedback "${{ github.event.comment.body }}" --output-format github >> $GITHUB_OUTPUT
           cat $GITHUB_OUTPUT
+
+# Comment on the current PR with should_update and reason
+      - name: Create comment
+        uses: peter-evans/create-or-update-comment@v4
+        if: steps.update-readme.outputs.should_update == 'True'
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            Updating using feedback from ${{ github.event.comment.id }}.
+
+            Reason:
+            ${{ steps.update-readme.outputs.reason }}
       # - name: Extract branch name
       #   shell: bash
       #   run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
