@@ -51,6 +51,7 @@ runs:
     # Fail fast if the API key is empty
     - name: Check API Key
       if: ${{ inputs.anthropic-api-key == '' }}
+      shell: bash
       run: |
         echo "Error: anthropic-api-key is required."
         exit 1
