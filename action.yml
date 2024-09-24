@@ -7,11 +7,13 @@ inputs:
     description: 'GitHub Token to authenticate the action.'
     required: true
   anthropic-api-key:
-    description: 'Anthropic API Key to use for processing updates.'
+    description: 'Anthropic API Key (we use their LLM APIs to generate the README updates).'
     required: true
+  # TODO: This should be inferred from the github context
   repository:
     description: 'The repository where the pull request was opened.'
     required: true
+  # TODO: This should be inferred from the github context
   pull-request-number:
     description: 'The number of the pull request to process.'
     required: true
@@ -23,12 +25,32 @@ inputs:
 runs:
   using: "composite"
   steps:
+    # Print the current directory and list files
+    - name: Show file system
+      shell: bash
+      run: |
+        echo "Current directory"
+        pwd
+        ls -F
+        echo "Action directory"
+        cd ${{ github.action_path }}
+        pwd
+        ls -F
+
+    - name: Show github context object
+      run: |
+        cat << OBJECT
+        ${{ toJson(github) }}
+        OBJECT
+
     # Checkout the repository (TODO: Use the version pinned in the workflow)
-    - name: Check out ktrnka/update-your-readme
-      uses: actions/checkout@v4
-      with:
-        repository: ktrnka/update-your-readme
-        path: ktrnka/update-your-readme
+    # - name: Check out ktrnka/update-your-readme
+    #   uses: actions/checkout@v4
+    #   with:
+    #     repository: ktrnka/update-your-readme
+    #     path: ktrnka/update-your-readme
+
+    # Note: It's already checked out into ${{ github.action_path }}
 
     # Change directory to the cloned repository
     # - name: Change directory
@@ -43,35 +65,23 @@ runs:
     
     # Install dependencies
     - name: Install dependencies
+      working-directory: ${{ github.action_path }}
       shell: bash
       run: |
-        cd ktrnka/update-your-readme
         python -m pip install --upgrade pip
         pip install pipenv
         pipenv install
-        cd -
-
-    # Print the current directory and list files
-    - name: Print working directory and list files
-      shell: bash
-      run: |
-        pwd
-        ls -F
-        cd ktrnka/update-your-readme
-        pwd
-        ls -F
 
     # Run the core logic to update the README
     # NOTE: Beware the ../..
     - name: Update README
+      working-directory: ${{ github.action_path }}
       shell: bash
       run: |
-        cd ktrnka/update-your-readme
         pipenv run python src/core.py \
         --repository ${{ inputs.repository }} \
         --pr ${{ inputs.pull-request-number }} \
-        --readme ../../${{ inputs.readme-file }}
-        cd -
+        --readme ${{ github.workspace }}/${{ inputs.readme-file }}
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
         ANTHROPIC_API_KEY: ${{ inputs.anthropic-api-key }}
