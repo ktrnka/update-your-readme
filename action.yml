@@ -38,6 +38,7 @@ runs:
         ls -F
 
     - name: Show github context object
+      shell: bash
       run: |
         cat << OBJECT
         ${{ toJson(github) }}
