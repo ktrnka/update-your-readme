@@ -22,7 +22,7 @@ Prerequisites:
 To use this action in your GitHub workflow, add the following step to your `.github/workflows/your-workflow.yml` file, replacing the version as needed:
 
 ```yaml
-- uses: ktrnka/update-your-readme@v1
+- uses: ktrnka/update-your-readme@v0.3
   with:
     anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
     readme-file: README.md
