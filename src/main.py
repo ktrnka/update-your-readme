@@ -222,12 +222,12 @@ If the README should be updated, take care to write the updated_readme
 
 
 def review_pull_request(
-    repo: Repository, pr: PullRequest, tries_remaining=1, feedback: str = None
+    repo: Repository, pr: PullRequest, tries_remaining=1, feedback: str = None, use_base_readme=False
 ) -> ReadmeRecommendation:
 
     try:
         readme = repo.get_contents(
-            "README.md", ref=pr.base.sha
+            "README.md", ref=pr.base.sha if use_base_readme else pr.head.sha
         ).decoded_content.decode()
 
         pipeline = fill_prompt(
