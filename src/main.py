@@ -24,12 +24,16 @@ def pull_request_to_markdown(pr: PullRequest, excluded_diff_types={"ipynb"}) -> 
 ## [{pr.title}]){pr.html_url}
 {pr.body or 'No description provided.'}
 
+### Commit Messages
 """
+    for commit in pr.get_commits():
+        text += f"- {commit.commit.message}\n"
+
     for file in pr.get_files():
         patch = "Can't render patch."
         if file.patch and file.filename.split(".")[-1] not in excluded_diff_types:
             patch = file.patch
-        text += f"""## {file.filename}\n{patch}\n\n"""
+        text += f"""### {file.filename}\n{patch}\n\n"""
 
     return text
 
@@ -123,11 +127,11 @@ def test_output_validation():
 readme_guidelines = """
 # README Guidelines
 
-Provide a Brief Overview of the Project
+## Provide a Brief Overview of the Project
 Include a brief but informative description of your project's purpose, functionality, and goals. This helps users quickly grasp the value of your project and determine if it's relevant to their needs.
 Example: A user-friendly weather forecasting app that provides real-time data, daily forecasts, and weather alerts for locations worldwide.
 
-Installation and Setup
+## Installation and Setup
 List Prerequisites and System Requirements
 
 Clearly outline any prerequisites, such as software dependencies, system requirements, or environment variables, for your project. This helps users determine if they can use your project on their system and prepares them for the installation process.
@@ -159,18 +163,12 @@ npm start
 ```
 
 ## Use Markdown for Formatting
-Headers, Lists, Tables, and More
-
 Markdown is a lightweight markup language that makes it easy to format and style text. Use headers, lists, tables, and other elements to organize your README and make it visually appealing.
 
 ## Emphasize Readability and Clarity
-Break Down Large Blocks of Text
 
-Large blocks of text can be intimidating and challenging to read. Break down large paragraphs into smaller sections or bullet points to improve readability.
-
-Use Clear and Concise Language
-
-Write using clear and concise language to ensure that your README is easily understood by users of varying technical expertise. Avoid using jargon or overly technical language without proper explanation.
+* Large blocks of text can be challenging to read. Break down large paragraphs into smaller sections or bullet points to improve readability.
+* Write using clear and concise language to ensure that your README is easily understood by users of varying technical expertise. Avoid using jargon or overly technical language without proper explanation.
 
 """
 
@@ -191,6 +189,7 @@ def fill_prompt(
                         # Source: https://github.com/langchain-ai/langchain/discussions/25610
                         "text": f"""
 You'll review a pull request and determine if the README should be updated, then suggest appropriate changes.
+The readme should be updated if it contains outdated information or if the pull request introduces major new features or changes that should be reflected in the README.
 
 {readme_guidelines}
 """,
@@ -199,7 +198,7 @@ You'll review a pull request and determine if the README should be updated, then
             ),
             HumanMessage(
                 content=f"""
-# Existing README from the base branch
+# Existing README
 {readme}
 
 # Pull request changes
@@ -213,8 +212,6 @@ Based on the above information, please provide a structured output indicating:
 A) should_update: Should the README be updated?
 B) reason: Why?
 C) updated_readme: The updated README content (if applicable)
-
-If the README should be updated, take care to write the updated_readme
 """
             ),
         ]
