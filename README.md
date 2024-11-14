@@ -4,9 +4,11 @@ This project automatically updates README files based on changes in pull request
 
 ## Features
 
-- Suggests README updates based on 1) the pull request description 2) the code changes in the PR
+- Suggests README updates based on 1) the pull request description 2) the code changes in the PR 3) commit messages
 - Uses LangChain and Anthropic's Claude model for intelligent suggestions
 - Option to skip README checks for testing purposes
+- Tuned prompt to avoid generating unnecessary changes
+- Uses the latest version of the README from the HEAD of the branch in live usage
 
 Currently only available for developers of this repo:
 - If you comment on a README PR, it will regenerate the README using your feedback
@@ -89,3 +91,21 @@ To use these features, ensure that your repository has the necessary secrets set
 ### Debugging
 
 The action supports a `debug` input, which can be set to "true" to enable additional debugging information. This can be helpful when troubleshooting issues with the action.
+
+## README Guidelines
+
+When updating the README, consider the following guidelines:
+
+### Provide a Brief Overview of the Project
+Include a brief but informative description of your project's purpose, functionality, and goals. This helps users quickly grasp the value of your project and determine if it's relevant to their needs.
+
+### Installation and Setup
+- List prerequisites and system requirements
+- Provide step-by-step instructions for installation and setup
+
+### Use Markdown for Formatting
+Markdown is a lightweight markup language that makes it easy to format and style text. Use headers, lists, tables, and other elements to organize your README and make it visually appealing.
+
+### Emphasize Readability and Clarity
+- Break down large blocks of text into smaller sections or bullet points to improve readability.
+- Write using clear and concise language to ensure that your README is easily understood by users of varying technical expertise. Avoid using jargon or overly technical language without proper explanation.
