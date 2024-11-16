@@ -6,6 +6,9 @@ inputs:
   anthropic-api-key:
     description: 'Anthropic API Key (we use their LLM APIs to generate the README updates).'
     required: true
+  anthropic-model:
+    description: 'Anthropic model to use. You can change to a Haiku model to reduce API costs.'
+    default: 'claude-3-5-sonnet-20240620'
   readme-file:
     description: 'The path to the README file to update.'
     required: true
@@ -81,6 +84,7 @@ runs:
         --repository ${{ github.repository }} \
         --pr ${{ github.event.pull_request.number }} \
         --readme ${{ github.workspace }}/${{ inputs.readme-file }} \
+        --model ${{ inputs.anthropic-model }} \
         --output-format github \
         >> $GITHUB_OUTPUT
         cat $GITHUB_OUTPUT
