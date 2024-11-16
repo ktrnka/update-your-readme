@@ -207,7 +207,7 @@ def get_model(model_name: str) -> ChatAnthropic:
         warnings.filterwarnings("ignore", category=UserWarning)
 
         # 3.5 models have a max_tokens of 8192, while 3.0 models have a max_tokens of 4096
-        max_tokens = 8192 if model_name.startswith("claude-3-5-") in model_name else 4096
+        max_tokens = 8192 if model_name.startswith("claude-3-5-") else 4096
 
         return ChatAnthropic(
             model=model_name,
