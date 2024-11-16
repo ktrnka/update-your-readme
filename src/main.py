@@ -235,6 +235,7 @@ def review_pull_request(
         return result
     except ValidationError as e:
         if tries_remaining > 1:
+            # BUG? If this happens, and we're piping stdout to a file to parse the output it may break Github's output parsing
             print("Validation error, trying again")
             return review_pull_request(repo, pr, tries_remaining - 1)
         else:
