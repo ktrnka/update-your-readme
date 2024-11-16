@@ -247,6 +247,7 @@ if __name__ == "__main__":
     parser.add_argument("--readme", type=str, required=True, help="README file")
     parser.add_argument("--pr", type=int, required=True, help="Pull request number")
     parser.add_argument("--feedback", type=str, help="User feedback for LLM")
+    parser.add_argument("--model", type=str, default="claude-3-5-sonnet-20240620", help="Anthropic model to use")
     parser.add_argument(
         "--output-format",
         type=str,
