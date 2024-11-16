@@ -197,7 +197,7 @@ C) updated_readme: The updated README content (if applicable)
 
 def get_model(model_name: str) -> ChatAnthropic:
     # model notes
-    # What we used before: claude-3-5-sonnet-20240620
+    # What we used in development: claude-3-5-sonnet-20240620
     # Fast, cheap: claude-3-haiku-20240307
     with warnings.catch_warnings():
         # The specific UserWarning we're ignoring is:
@@ -206,11 +206,13 @@ def get_model(model_name: str) -> ChatAnthropic:
         #             Please confirm that extra_headers is what you intended.
         warnings.filterwarnings("ignore", category=UserWarning)
 
+        # 3.5 models have a max_tokens of 8192, while 3.0 models have a max_tokens of 4096
+        max_tokens = 8192 if model_name.startswith("claude-3-5-") in model_name else 4096
+
         return ChatAnthropic(
             model=model_name,
-            # The default is 1024 which leads to pipeline failures
-            # Sonnet supports 8192 tokens, Haiku 3 supports 4096 tokens, Haiku 3.5 supports 8192
-            max_tokens=4096,
+            # The default is 1024 which leads to pipeline failures on longer readmes (because it can't regenerate the entire readme)
+            max_tokens=max_tokens,
             # On prompt caching:
             # https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
             # https://api.python.langchain.com/en/latest/chat_models/langchain_anthropic.chat_models.ChatAnthropic.html
@@ -218,11 +220,8 @@ def get_model(model_name: str) -> ChatAnthropic:
         )
 
 def review_pull_request(
-    model_name:str, repo: Repository, pr: PullRequest, tries_remaining=1, feedback: str = None, use_base_readme=False
+    model: ChatAnthropic, repo: Repository, pr: PullRequest, tries_remaining=1, feedback: str = None, use_base_readme=False
 ) -> ReadmeRecommendation:
-    
-    model = get_model(model_name)
-
     try:
         readme = repo.get_contents(
             "README.md", ref=pr.base.sha if use_base_readme else pr.head.sha
@@ -268,7 +267,8 @@ if __name__ == "__main__":
             should_update=False, reason="'NO README REVIEW' in PR body"
         )
     else:
-        result = review_pull_request(args.model, repo, pr, feedback=args.feedback)
+        model = get_model(args.model)
+        result = review_pull_request(model, repo, pr, feedback=args.feedback)
 
         if result.should_update and result.updated_readme:
             with open(args.readme, "w") as f:
