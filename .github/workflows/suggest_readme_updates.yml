@@ -14,8 +14,9 @@ jobs:
       # Note: This points to the latest version on main; users should pull a tagged version instead
       # When doing development on a branch, point to the branch
       # The "uses" field doesn't support variables, so we can't use the branch name dynamically
-      - uses: ktrnka/update-your-readme@main
+      - uses: ktrnka/update-your-readme@model-config
         with:
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          anthropic-model: "claude-3-5-sonnet-20241022"
           readme-file: README.md
           debug: "true"
