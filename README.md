@@ -6,7 +6,6 @@ This project automatically updates README files based on changes in pull request
 
 - Suggests README updates based on 1) the pull request description 2) the code changes in the PR 3) commit messages
 - Uses LangChain and Anthropic's Claude model for intelligent suggestions
-- Configurable model selection to balance quality vs cost
 - Option to skip README checks for testing purposes
 
 Currently only available for developers of this repo:
@@ -36,8 +35,8 @@ Make sure to set up the `ANTHROPIC_API_KEY` secret in your repository settings. 
 ### Model Configuration
 
 You can specify which Anthropic model to use through the `anthropic-model` input parameter. This allows you to balance between quality and cost:
-- `claude-3-5-sonnet-20240620` (default) - Recommended for best quality
-- `claude-3-haiku-20240307` - Faster and more cost-effective option
+- `claude-3-5-sonnet-20240620` (default) - Recommended for quality
+- `claude-3-5-haiku-latest` - Faster and more cost-effective option. Note that the behavior may change if you use `latest` rather than a specific version
 
 In your repo settings, under Actions > General > Workflow Permissions be sure to check "Allow GitHub Actions to create and approve pull requests" and allow read/write from Github Actions:
 ![Workflow Permissions](workflow_permissions.png)
