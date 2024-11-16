@@ -26,10 +26,17 @@ To use this action in your GitHub workflow, add the following step to your `.git
   with:
     anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
     readme-file: README.md
+    anthropic-model: "claude-3-5-sonnet-20240620"  # Optional: Choose your preferred Claude model
 ```
 See `.github/workflows/suggest_readme_updates.yml` for an example.
 
 Make sure to set up the `ANTHROPIC_API_KEY` secret in your repository settings. Note: The Action will not work on PRs from forks because this secret isn't available on workflows for those PRs.
+
+### Model Configuration
+
+You can specify which Anthropic model to use through the `anthropic-model` input parameter. This allows you to balance between quality and cost:
+- `claude-3-5-sonnet-20240620` (default) - Recommended for quality
+- `claude-3-5-haiku-latest` - Faster and more cost-effective option. Note that the behavior may change if you use `latest` rather than a specific version
 
 In your repo settings, under Actions > General > Workflow Permissions be sure to check "Allow GitHub Actions to create and approve pull requests" and allow read/write from Github Actions:
 ![Workflow Permissions](workflow_permissions.png)
