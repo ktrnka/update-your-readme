@@ -5,12 +5,12 @@ This project automatically updates README files based on changes in pull request
 ## Features
 
 - Suggests README updates based on 1) the pull request description 2) the code changes in the PR 3) commit messages
+- Automatically closes stale README update PRs
 - Uses LangChain and Anthropic's Claude model for intelligent suggestions
 - Option to skip README checks for testing purposes
 
 Currently only available for developers of this repo:
 - If you comment on a README PR, it will regenerate the README using your feedback
-- If you merge/close a PR with an unmerged README PR, it will automatically close the stale README PR
 
 ## Usage
 
@@ -27,6 +27,7 @@ To use this action in your GitHub workflow, add the following step to your `.git
     anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
     readme-file: README.md
     anthropic-model: "claude-3-5-sonnet-20240620"  # Optional: Choose your preferred Claude model
+    pr-labels: "documentation, update-your-readme"  # Optional: Customize labels for README update PRs
 ```
 See `.github/workflows/suggest_readme_updates.yml` for an example.
 
@@ -84,9 +85,11 @@ This project includes GitHub Actions workflows that enhance the README update pr
    - Creates a new pull request with the suggested changes
    - Adds a comment to the original pull request with a link to the suggested changes
 
-2. **Close Stale README PRs**: Defined in `.github/workflows/close_stale_prs.yml`, this workflow:
-   - Triggers when a pull request is closed
-   - Runs a shell script to identify and close any stale README update PRs associated with the closed PR
+2. **Close Stale PRs**: Defined in `.github/workflows/close_stale_prs.yml`, this workflow:
+   - Runs on a daily schedule
+   - Uses the `actions/stale@v9` action to automatically close stale pull requests
+   - Configurable stale and close timeframes
+   - Targets PRs with the "update-your-readme" label
 
 3. **README Feedback**: Defined in `.github/workflows/readme_feedback.yml`, this workflow:
    - Handles feedback on README updates
@@ -96,7 +99,6 @@ To use these features, ensure that your repository has the necessary secrets set
 ### Debugging
 
 The action supports a `debug` input, which can be set to "true" to enable additional debugging information. This can be helpful when troubleshooting issues with the action.
-
 
 ### Use Markdown for Formatting
 Markdown is a lightweight markup language that makes it easy to format and style text. Use headers, lists, tables, and other elements to organize your README and make it visually appealing.

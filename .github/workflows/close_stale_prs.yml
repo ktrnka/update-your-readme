@@ -1,18 +1,15 @@
-name: Close stale README PRs
-
+name: 'Close stale PRs'
 on:
-  pull_request:
-    types:
-      - closed
+  schedule:
+    - cron: '30 1 * * *'
 
 jobs:
-  close-prs:
+  stale:
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Close dependent README PRs
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: src/close_stale_prs.sh ${{ github.event.pull_request.number }}
+      - uses: actions/stale@v9
+        with:
+          close-pr-message: 'Closing due to inactivity.'
+          days-before-stale: 2
+          days-before-close: 3
+          only-labels: 'update-your-readme'
