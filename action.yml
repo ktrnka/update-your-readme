@@ -17,6 +17,10 @@ inputs:
     description: 'Enable debug mode.'
     required: false
     default: 'false'
+  pr-labels:
+    description: 'Comma-separated list of labels to add on README PRs.'
+    required: false
+    default: 'documentation, update-your-readme'
 
 runs:
   using: "composite"
@@ -107,7 +111,7 @@ runs:
           [update-your-readme](https://github.com/ktrnka/update-your-readme).
           The README changes are generated based on the changes in PR ${{ github.event.pull_request.html_url }} and
           your existing README.
-        labels: feature, automated pr
+        labels: ${{ inputs.pr-labels }}
         branch: "update-your-readme-${{ github.event.pull_request.number }}"
         base: ${{ github.event.pull_request.head.ref }}
         reviewers: ${{ github.event.pull_request.user.login }}
