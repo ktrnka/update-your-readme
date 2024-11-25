@@ -5,14 +5,12 @@ This project automatically updates README files based on changes in pull request
 ## Features
 
 - Suggests README updates based on 1) the pull request description 2) the code changes in the PR 3) commit messages
+- Automatically closes stale README update PRs
 - Uses LangChain and Anthropic's Claude model for intelligent suggestions
 - Option to skip README checks for testing purposes
-- Automatically closes stale README update PRs
-- Configurable PR labels for README update pull requests
 
 Currently only available for developers of this repo:
 - If you comment on a README PR, it will regenerate the README using your feedback
-- If you merge/close a PR with an unmerged README PR, it will automatically close the stale README PR
 
 ## Usage
 
@@ -47,17 +45,6 @@ In your repo settings, under Actions > General > Workflow Permissions be sure to
 ### Skipping README Check
 
 To skip the README check for testing purposes, include "NO README REVIEW" in the pull request body. This will cause the action to exit without performing any updates.
-
-### Configuring PR Labels
-
-You can customize the labels applied to README update pull requests by using the `pr-labels` input parameter. Provide a comma-separated list of labels you want to apply. For example:
-
-```yaml
-- uses: ktrnka/update-your-readme@v0.3
-  with:
-    # ... other parameters ...
-    pr-labels: "documentation, automated-pr, needs-review"
-```
 
 ## Development
 
