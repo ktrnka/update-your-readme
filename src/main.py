@@ -14,8 +14,6 @@ from langchain_core.language_models import BaseChatModel
 
 load_dotenv()
 
-github_client = Github(auth=Auth.Token(os.environ["GITHUB_TOKEN"]))
-
 
 def pull_request_to_markdown(pr: PullRequest, excluded_diff_types={"ipynb"}) -> str:
     """
@@ -285,6 +283,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    github_client = Github(auth=Auth.Token(os.environ["GITHUB_TOKEN"]))
     repo = github_client.get_repo(args.repository)
     pr = repo.get_pull(args.pr)
 
