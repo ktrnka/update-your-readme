@@ -3,3 +3,7 @@ install-uv:
 
 install:
 	uv sync --all-extras --dev
+
+test:
+	uv run pytest
+	
