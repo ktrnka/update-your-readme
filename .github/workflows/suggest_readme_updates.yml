@@ -17,7 +17,7 @@ jobs:
       - uses: ktrnka/update-your-readme@openai-support
         with:
           model-provider: "openai"
-          model: gpt4o-mini
+          model: gpt-4o-mini-2024-07-18
           api-key: ${{ secrets.OPENAI_API_KEY }}
           readme-file: README.md
           debug: "true"
