@@ -22,7 +22,7 @@ Currently only available for developers of this repo:
 To use this action in your GitHub workflow, add the following step to your `.github/workflows/your-workflow.yml` file, replacing the version as needed:
 
 ```yaml
-- uses: ktrnka/update-your-readme@main
+- uses: ktrnka/update-your-readme@uv-packaging
   with:
     model-provider: "openai"
     api-key: ${{ secrets.OPENAI_API_KEY }}
@@ -46,6 +46,20 @@ You can specify which model to use through the `model-provider` and `model` inpu
 
 In your repo settings, under Actions > General > Workflow Permissions be sure to check "Allow GitHub Actions to create and approve pull requests" and allow read/write from Github Actions:
 ![Workflow Permissions](workflow_permissions.png)
+
+### Installation and Setup
+
+To set up the project, you need to install the 'uv' package for managing the Python environment:
+
+1. Install uv:
+   ```bash
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   ```
+
+2. Install dependencies:
+   ```bash
+   uv sync --all-extras --dev
+   ```
 
 ### Skipping README Check
 
