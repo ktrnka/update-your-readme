@@ -3,11 +3,16 @@ description: 'Automatically suggest updates to your README based on pull request
 author: 'Keith and Lara'
 
 inputs:
-  anthropic-api-key:
-    description: 'Anthropic API Key (we use their LLM APIs to generate the README updates).'
+  model-provider: 
+    description: 'Model provider to use. (anthropic or openai)'
     required: true
-  anthropic-model:
-    description: 'Anthropic model to use. You can change to a Haiku model to reduce API costs.'
+    default: 'anthropic'
+  api-key:
+    description: 'API Key for the specified model provider.'
+    required: true
+  model:
+    description: 'Model to use.'
+    required: true
     default: 'claude-3-5-sonnet-20240620'
   readme-file:
     description: 'The path to the README file to update.'
@@ -57,10 +62,10 @@ runs:
 
     # Fail fast if the API key is empty
     - name: Check API Key
-      if: ${{ inputs.anthropic-api-key == '' }}
+      if: ${{ inputs.api-key == '' }}
       shell: bash
       run: |
-        echo "Error: anthropic-api-key is required."
+        echo "Error: api-key is required."
         exit 1
 
     # Set up Python environment
@@ -88,13 +93,14 @@ runs:
         --repository ${{ github.repository }} \
         --pr ${{ github.event.pull_request.number }} \
         --readme ${{ github.workspace }}/${{ inputs.readme-file }} \
-        --model ${{ inputs.anthropic-model }} \
+        --model-provider ${{ inputs.model-provider }} \
+        --model ${{ inputs.model }} \
         --output-format github \
         >> $GITHUB_OUTPUT
         cat $GITHUB_OUTPUT
       env:
         GITHUB_TOKEN: ${{ github.token }}
-        ANTHROPIC_API_KEY: ${{ inputs.anthropic-api-key }}
+        API_KEY: ${{ inputs.api-key }}
     
     # Create a new PR with README changes
     - name: Create Pull Request

@@ -14,8 +14,10 @@ jobs:
       # Note: This points to the latest version on main; users should pull a tagged version instead
       # When doing development on a branch, point to the branch
       # The "uses" field doesn't support variables, so we can't use the branch name dynamically
-      - uses: ktrnka/update-your-readme@main
+      - uses: ktrnka/update-your-readme@iopenai-support
         with:
-          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          model-provider: "openai"
+          model: gpt4o-mini
+          api-key: ${{ secrets.OPENAI_API_KEY }}
           readme-file: README.md
           debug: "true"

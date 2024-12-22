@@ -1,14 +1,15 @@
 import warnings
 from github import Github, Auth, Repository, PullRequest
 import os
-import sys
 from argparse import ArgumentParser
 from dotenv import load_dotenv
+from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field, ValidationError, model_validator
 from typing import Optional
 from langchain_anthropic import ChatAnthropic
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.messages import SystemMessage, HumanMessage
+from langchain_core.language_models import BaseChatModel
 
 
 load_dotenv()
@@ -195,32 +196,45 @@ C) updated_readme: The updated README content (if applicable)
         ]
     )
 
-def get_model(model_name: str) -> ChatAnthropic:
+
+def get_model(model_provider: str, model_name: str) -> BaseChatModel:
     # model notes
     # What we used in development: claude-3-5-sonnet-20240620
     # Fast, cheap: claude-3-haiku-20240307
-    with warnings.catch_warnings():
-        # The specific UserWarning we're ignoring is:
-        # UserWarning: WARNING! extra_headers is not default parameter.
-        #             extra_headers was transferred to model_kwargs.
-        #             Please confirm that extra_headers is what you intended.
-        warnings.filterwarnings("ignore", category=UserWarning)
+    if model_provider == "anthropic":
+        with warnings.catch_warnings():
+            # The specific UserWarning we're ignoring is:
+            # UserWarning: WARNING! extra_headers is not default parameter.
+            #             extra_headers was transferred to model_kwargs.
+            #             Please confirm that extra_headers is what you intended.
+            warnings.filterwarnings("ignore", category=UserWarning)
 
-        # 3.5 models have a max_tokens of 8192, while 3.0 models have a max_tokens of 4096
-        max_tokens = 8192 if model_name.startswith("claude-3-5-") else 4096
+            # 3.5 models have a max_tokens of 8192, while 3.0 models have a max_tokens of 4096
+            max_tokens = 8192 if model_name.startswith("claude-3-5-") else 4096
 
-        return ChatAnthropic(
-            model=model_name,
-            # The default is 1024 which leads to pipeline failures on longer readmes (because it can't regenerate the entire readme)
-            max_tokens=max_tokens,
-            # On prompt caching:
-            # https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
-            # https://api.python.langchain.com/en/latest/chat_models/langchain_anthropic.chat_models.ChatAnthropic.html
-            extra_headers={"anthropic-beta": "prompt-caching-2024-07-31"},
-        )
+            return ChatAnthropic(
+                model=model_name,
+                # The default is 1024 which leads to pipeline failures on longer readmes (because it can't regenerate the entire readme)
+                max_tokens=max_tokens,
+                # On prompt caching:
+                # https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
+                # https://api.python.langchain.com/en/latest/chat_models/langchain_anthropic.chat_models.ChatAnthropic.html
+                extra_headers={"anthropic-beta": "prompt-caching-2024-07-31"},
+                api_key=os.environ["API_KEY"],
+            )
+    elif model_provider == "openai":
+        return ChatOpenAI(model=model_name, api_key=os.environ["API_KEY"])
+    else:
+        raise ValueError(f"Unknown model provider: {model_provider}")
+
 
 def review_pull_request(
-    model: ChatAnthropic, repo: Repository, pr: PullRequest, tries_remaining=1, feedback: str = None, use_base_readme=False
+    model: ChatAnthropic,
+    repo: Repository,
+    pr: PullRequest,
+    tries_remaining=1,
+    feedback: str = None,
+    use_base_readme=False,
 ) -> ReadmeRecommendation:
     try:
         readme = repo.get_contents(
@@ -244,11 +258,23 @@ def review_pull_request(
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("--repository", "-r", type=str, required=True, help="Repository name")
+    parser.add_argument(
+        "--repository", "-r", type=str, required=True, help="Repository name"
+    )
     parser.add_argument("--readme", type=str, required=True, help="README file")
     parser.add_argument("--pr", type=int, required=True, help="Pull request number")
     parser.add_argument("--feedback", type=str, help="User feedback for LLM")
-    parser.add_argument("--model", type=str, default="claude-3-5-sonnet-20240620", help="Anthropic model to use")
+
+    parser.add_argument(
+        "--model-provider",
+        type=str,
+        choices=["anthropic", "openai"],
+        default="anthropic",
+        help="LLM provider to use",
+    )
+    parser.add_argument(
+        "--model", type=str, default="claude-3-5-sonnet-20240620", help="<odel to use"
+    )
     parser.add_argument(
         "--output-format",
         type=str,
@@ -268,7 +294,7 @@ if __name__ == "__main__":
             should_update=False, reason="'NO README REVIEW' in PR body"
         )
     else:
-        model = get_model(args.model)
+        model = get_model(args.model_provider, args.model)
         result = review_pull_request(model, repo, pr, feedback=args.feedback)
 
         if result.should_update and result.updated_readme:
