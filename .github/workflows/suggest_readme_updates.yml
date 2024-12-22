@@ -16,6 +16,8 @@ jobs:
       # The "uses" field doesn't support variables, so we can't use the branch name dynamically
       - uses: ktrnka/update-your-readme@main
         with:
-          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          model-provider: "openai"
+          model: gpt-4o-mini-2024-07-18
+          api-key: ${{ secrets.OPENAI_API_KEY }}
           readme-file: README.md
           debug: "true"

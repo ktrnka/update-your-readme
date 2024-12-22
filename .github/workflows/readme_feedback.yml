@@ -49,11 +49,12 @@ jobs:
           pip install pipenv
           pipenv install
 
+      # KT: This is likely broken now that we have more configuration of the model provider and model
       - name: Update README
         id: update-readme
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          API_KEY: ${{ secrets.API_KEY }}
         run: |
           pipenv run python src/main.py --repository ${{ github.repository }} --pr ${{ steps.prs.outputs.original_num }} --readme README.md --feedback "${{ github.event.comment.body }}" --output-format github >> $GITHUB_OUTPUT
           cat $GITHUB_OUTPUT
