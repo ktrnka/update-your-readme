@@ -22,7 +22,7 @@ Currently only available for developers of this repo:
 To use this action in your GitHub workflow, add the following step to your `.github/workflows/your-workflow.yml` file, replacing the version as needed:
 
 ```yaml
-- uses: ktrnka/update-your-readme@uv-packaging
+- uses: ktrnka/update-your-readme@VERSION
   with:
     model-provider: "openai"
     api-key: ${{ secrets.OPENAI_API_KEY }}
@@ -52,13 +52,13 @@ In your repo settings, under Actions > General > Workflow Permissions be sure to
 To set up the project, you need to install the 'uv' package for managing the Python environment:
 
 1. Install uv:
-   ```bash
-   curl -LsSf https://astral.sh/uv/install.sh | sh
+   ```
+   make install-uv
    ```
 
 2. Install dependencies:
-   ```bash
-   uv sync --all-extras --dev
+   ```
+   make install
    ```
 
 ### Skipping README Check
@@ -72,7 +72,7 @@ To skip the README check for testing purposes, include "NO README REVIEW" in the
 This project uses pytest for testing. To run the tests, execute the following command:
 
 ```
-pytest
+make test
 ```
 
 ### Code Formatting
