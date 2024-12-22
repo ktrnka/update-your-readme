@@ -22,7 +22,7 @@ Currently only available for developers of this repo:
 To use this action in your GitHub workflow, add the following step to your `.github/workflows/your-workflow.yml` file, replacing the version as needed:
 
 ```yaml
-- uses: ktrnka/update-your-readme@openai-support
+- uses: ktrnka/update-your-readme@main
   with:
     model-provider: "openai"
     api-key: ${{ secrets.OPENAI_API_KEY }}
@@ -85,7 +85,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 This project includes GitHub Actions workflows that enhance the README update process:
 
 1. **Suggest README Updates**: Defined in `.github/workflows/suggest_readme_updates.yml`, this workflow:
-   - Uses the `ktrnka/update-your-readme@openai-support` action
+   - Uses the `ktrnka/update-your-readme` action
    - Runs the README update process
    - Creates a new pull request with the suggested changes
    - Adds a comment to the original pull request with a link to the suggested changes
@@ -99,7 +99,7 @@ This project includes GitHub Actions workflows that enhance the README update pr
 3. **README Feedback**: Defined in `.github/workflows/readme_feedback.yml`, this workflow:
    - Handles feedback on README updates
 
-To use these features, ensure that your repository has the necessary secrets set up (`ANTHROPIC_API_KEY` or `OPENAI_API_KEY`).
+To use these features, ensure that your repository has the necessary secrets set up (`ANTHROPIC_API_KEY` or `OPENAI_API_KEY`) and pass them as parameters to the action.
 
 ### Debugging
 
