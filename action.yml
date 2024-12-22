@@ -72,9 +72,12 @@ runs:
       uses: astral-sh/setup-uv@v3
 
     - name: Set up Python
+      shell: bash
       run: uv python install
 
-    - run: make install
+    - name: Install dependencies
+      shell: bash
+      run: make install
 
     # Run the core logic to update the README
     - name: Update README
