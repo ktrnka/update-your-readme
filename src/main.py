@@ -147,6 +147,9 @@ Markdown is a lightweight markup language that makes it easy to format and style
 * Large blocks of text can be challenging to read. Break down large paragraphs into smaller sections or bullet points to improve readability.
 * Write using clear and concise language to ensure that your README is easily understood by users of varying technical expertise. Avoid using jargon or overly technical language without proper explanation.
 
+## Avoid Ephemeral References
+* Do not include references such as "recent changes," "recently improved," or similar time-based language. The README should be timeless, describing the current state of the project without assuming how new or old a feature is.
+
 """
 
 
@@ -166,9 +169,14 @@ def fill_prompt(
                         # Source: https://github.com/langchain-ai/langchain/discussions/25610
                         "text": f"""
 You'll review a pull request and determine if the README should be updated, then suggest appropriate changes.
-The readme should be updated if it contains outdated information or if the pull request introduces major new features or changes that should be reflected in the README.
+The README should be updated if it contains outdated information or if the pull request introduces major new features that are similar to those currently documented in the README.
+
+When updating the README, be sure to:
+* Keep the language timeless. Do not reference "recent" or "recently."
+* Focus on the current state of the project features and requirements.
 
 {readme_guidelines}
+
 """,
                     }
                 ]
