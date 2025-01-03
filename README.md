@@ -118,3 +118,6 @@ To use these features, ensure that your repository has the necessary secrets set
 ### Debugging
 
 The action supports a `debug` input, which can be set to "true" to enable additional debugging information. This can be helpful when troubleshooting issues with the action.
+
+## Avoid Ephemeral References
+* Do not include references such as "recent changes," "recently improved," or similar time-based language. The README should be timeless, describing the current state of the project without assuming how new or old a feature is.
