@@ -262,14 +262,12 @@ def review_pull_request(
         result = ReadmeRecommendation(**json_response_message)
 
         return result
+    # Not a retryable error
     except (HttpResponseError, ServiceResponseError) as e:
-        # Not a retryable error
         raise UnsupportedModelError(model_name) from e
-    # Note: Handle retry-able errors differently from non-retryable errors
+    # Note: Retryable errors
     except ValidationError as e:
         if tries_remaining > 1:
-            # BUG? If this happens, and we're piping stdout to a file to parse the output it may break Github's output parsing
-            # print("Validation error, trying again")
             return review_pull_request(repo, pr, tries_remaining - 1)
         else:
             raise e
@@ -293,14 +291,7 @@ if __name__ == "__main__":
     parser.add_argument("--feedback", type=str, help="User feedback for LLM")
 
     parser.add_argument(
-        "--model-provider",
-        type=str,
-        choices=["anthropic", "openai"],
-        default="anthropic",
-        help="LLM provider to use",
-    )
-    parser.add_argument(
-        "--model", type=str, default="claude-3-5-sonnet-20240620", help="<odel to use"
+        "--model", type=str, default="gpt-4o-mini", help="Model to use. See https://docs.github.com/en/github-models for options, though currently only 4o and 4o-mini are known to work with the Azure client's structured output"
     )
     parser.add_argument(
         "--output-format",
@@ -312,6 +303,9 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    if args.model not in {"gpt-4o", "gpt-4o-mini"}:
+        warnings.warn(f"Model {args.model} is untested: It may not work with Azure's structured output. You may find docs linked from https://docs.github.com/en/github-models")
+
     github_client = Github(auth=Auth.Token(os.environ["GITHUB_TOKEN"]))
     repo = github_client.get_repo(args.repository)
     pr = repo.get_pull(args.pr)
@@ -322,8 +316,8 @@ if __name__ == "__main__":
             should_update=False, reason="'NO README REVIEW' in PR body"
         )
     else:
-        model = get_client(args.model_provider, args.model)
-        result = review_pull_request(model, repo, pr, feedback=args.feedback)
+        client = get_client()
+        result = review_pull_request(client, args.model, repo, pr, feedback=args.feedback)
 
         if result.should_update and result.updated_readme:
             with open(args.readme, "w") as f:
