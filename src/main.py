@@ -1,16 +1,16 @@
+import json
 import warnings
 from github import Github, Auth, Repository, PullRequest
 import os
 from argparse import ArgumentParser
 from dotenv import load_dotenv
-from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field, ValidationError, model_validator
-from typing import Optional
-from langchain_anthropic import ChatAnthropic
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.messages import SystemMessage, HumanMessage
-from langchain_core.language_models import BaseChatModel
+from typing import Optional, Type
 
+from azure.ai.inference import ChatCompletionsClient
+from azure.ai.inference.models import SystemMessage, UserMessage, JsonSchemaFormat, CompletionsFinishReason, AssistantMessage
+from azure.core.credentials import AzureKeyCredential
+from azure.core.exceptions import HttpResponseError, ServiceResponseError
 
 load_dotenv()
 
@@ -19,6 +19,8 @@ def pull_request_to_markdown(pr: PullRequest, excluded_diff_types={"ipynb"}) -> 
     """
     Format key information from the pull request as markdown suitable for LLM input
     """
+
+    # TODO: Ways to trim it down dynamically if it's too long. Maybe dynamically exclude certain filetypes
     text = f"""
 ## [{pr.title}]){pr.html_url}
 {pr.body or 'No description provided.'}
@@ -65,8 +67,7 @@ class ReadmeRecommendation(BaseModel):
     )
     reason: str = Field(description="Reason for the recommendation")
     updated_readme: Optional[str] = Field(
-        description="Updated README content, required if should_update is True, otherwise optional",
-        default=None,
+        description="Updated README content, required if should_update is true, otherwise optional",
     )
 
     @model_validator(mode="after")
@@ -81,7 +82,17 @@ class ReadmeRecommendation(BaseModel):
 should_update={self.should_update}
 reason={gha_escape(self.reason)}
 """
+    
+def pydantic_model_to_azure_schema(pydantic_type: Type) -> JsonSchemaFormat:
+    schema = pydantic_type.schema()
+    schema["additionalProperties"] = False
 
+    return JsonSchemaFormat(
+        name=pydantic_type.__name__,
+        schema=schema,
+        description=pydantic_type.__doc__.strip(),
+        strict=True,
+    )
 
 def test_output_validation():
     # importing here because it's a dev dependency
@@ -102,7 +113,7 @@ def test_output_validation():
         ReadmeRecommendation(should_update=True, reason="test")
 
 
-# Copied from https://www.hatica.io/blog/best-practices-for-github-readme/
+# Adapted from https://www.hatica.io/blog/best-practices-for-github-readme/
 readme_guidelines = """
 # README Guidelines
 
@@ -157,19 +168,9 @@ Markdown is a lightweight markup language that makes it easy to format and style
 
 def fill_prompt(
     readme: str, pull_request_markdown: str, feedback: str
-) -> ChatPromptTemplate:
-    return ChatPromptTemplate.from_messages(
-        [
-            SystemMessage(
-                content=[
-                    {
-                        "type": "text",
-                        # This triggers caching for this message AND all messages before it in the pipeline, also including any tool prompts
-                        # Source: https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
-                        "cache_control": {"type": "ephemeral"},
-                        # If we want prompt caching, this can't have any Langchain prompt variables in it
-                        # Source: https://github.com/langchain-ai/langchain/discussions/25610
-                        "text": f"""
+) -> tuple[SystemMessage, UserMessage]:
+    return SystemMessage(
+                content=f"""
 You'll review a pull request and determine if the README should be updated, then suggest appropriate changes.
 The README should be updated if it contains outdated information or if the pull request introduces major new features that are similar to those currently documented in the README.
 
@@ -179,11 +180,7 @@ When updating the README, be sure to:
 
 {readme_guidelines}
 
-""",
-                    }
-                ]
-            ),
-            HumanMessage(
+"""), UserMessage(
                 content=f"""
 # Existing README
 {readme}
@@ -200,44 +197,44 @@ A) should_update: Should the README be updated?
 B) reason: Why?
 C) updated_readme: The updated README content (if applicable)
 """
-            ),
-        ]
+)
+
+def test_fill_prompt():
+    # Basic no-crash test
+    assert "DEFAULT README" in fill_prompt("# DEFAULT README", "# PR STUFF", "")
+
+def get_client() -> ChatCompletionsClient:
+    return ChatCompletionsClient(
+        endpoint="https://models.inference.ai.azure.com",
+        credential=AzureKeyCredential(os.environ["GITHUB_TOKEN"]),
+        # Needed for structured output
+        api_version="2024-12-01-preview",
     )
 
+def get_readme(repo: Repository, pr: PullRequest, use_base_readme=False) -> str:
+    return repo.get_contents(
+            "README.md", ref=pr.base.sha if use_base_readme else pr.head.sha
+        ).decoded_content.decode()
 
-def get_model(model_provider: str, model_name: str) -> BaseChatModel:
-    # model notes
-    # What we used in development: claude-3-5-sonnet-20240620
-    # Fast, cheap: claude-3-haiku-20240307
-    if model_provider == "anthropic":
-        with warnings.catch_warnings():
-            # The specific UserWarning we're ignoring is:
-            # UserWarning: WARNING! extra_headers is not default parameter.
-            #             extra_headers was transferred to model_kwargs.
-            #             Please confirm that extra_headers is what you intended.
-            warnings.filterwarnings("ignore", category=UserWarning)
+class UnsupportedModelError(ValueError):
+    """
+    Exception raised for errors in the model selection.
 
-            # 3.5 models have a max_tokens of 8192, while 3.0 models have a max_tokens of 4096
-            max_tokens = 8192 if model_name.startswith("claude-3-5-") else 4096
+    Attributes:
+        model -- the model that caused the error
+        message -- explanation of the error
+    """
+    def __init__(self, model, message="Selected model is not supported"):
+        self.model = model
+        self.message = message
+        super().__init__(self.message)
 
-            return ChatAnthropic(
-                model=model_name,
-                # The default is 1024 which leads to pipeline failures on longer readmes (because it can't regenerate the entire readme)
-                max_tokens=max_tokens,
-                # On prompt caching:
-                # https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
-                # https://api.python.langchain.com/en/latest/chat_models/langchain_anthropic.chat_models.ChatAnthropic.html
-                extra_headers={"anthropic-beta": "prompt-caching-2024-07-31"},
-                api_key=os.environ["API_KEY"],
-            )
-    elif model_provider == "openai":
-        return ChatOpenAI(model=model_name, api_key=os.environ["API_KEY"])
-    else:
-        raise ValueError(f"Unknown model provider: {model_provider}")
-
+class LlmError(ValueError):
+    pass
 
 def review_pull_request(
-    model: ChatAnthropic,
+    client: ChatCompletionsClient,
+    model_name: str,
     repo: Repository,
     pr: PullRequest,
     tries_remaining=1,
@@ -245,20 +242,37 @@ def review_pull_request(
     use_base_readme=False,
 ) -> ReadmeRecommendation:
     try:
-        readme = repo.get_contents(
-            "README.md", ref=pr.base.sha if use_base_readme else pr.head.sha
-        ).decoded_content.decode()
+        readme = get_readme(repo, pr, use_base_readme)
+        pr_content = pull_request_to_markdown(pr)
 
-        pipeline = fill_prompt(
-            readme, pull_request_to_markdown(pr), feedback
-        ) | model.with_structured_output(ReadmeRecommendation)
-        result = pipeline.invoke({})
+        response = client.complete(
+            messages=fill_prompt(readme, pr_content, feedback),
+            model=model_name,
+            temperature=0.2,
+            # The max on my tier
+            max_tokens=4000,
+            top_p=0.1,
+            response_format=pydantic_model_to_azure_schema(ReadmeRecommendation)
+        )
+
+        # Check the completion reason
+        if response.choices[0].finish_reason != CompletionsFinishReason.STOPPED:
+            raise LlmError(
+                f"Completion did not finish, finish_reason={response.choices[0].finish_reason}, usage={response.usage}"
+            )
+
+        json_response_message = json.loads(response.choices[0].message.content)
+        result = ReadmeRecommendation(**json_response_message)
 
         return result
+    except (HttpResponseError, ServiceResponseError) as e:
+        # Not a retryable error
+        raise UnsupportedModelError(model_name) from e
+    # Note: Handle retry-able errors differently from non-retryable errors
     except ValidationError as e:
         if tries_remaining > 1:
             # BUG? If this happens, and we're piping stdout to a file to parse the output it may break Github's output parsing
-            print("Validation error, trying again")
+            # print("Validation error, trying again")
             return review_pull_request(repo, pr, tries_remaining - 1)
         else:
             raise e
@@ -303,7 +317,7 @@ if __name__ == "__main__":
             should_update=False, reason="'NO README REVIEW' in PR body"
         )
     else:
-        model = get_model(args.model_provider, args.model)
+        model = get_client(args.model_provider, args.model)
         result = review_pull_request(model, repo, pr, feedback=args.feedback)
 
         if result.should_update and result.updated_readme:
