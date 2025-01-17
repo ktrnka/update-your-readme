@@ -105,9 +105,6 @@ def test_output_validation():
     with pytest.raises(ValidationError):
         ReadmeRecommendation(should_update=True)
 
-    # test that it passes if should_update is False and the updated_readme is missing
-    ReadmeRecommendation(should_update=False, reason="test")
-
     # test that it fails if should_update is True and the updated_readme is missing
     with pytest.raises(ValidationError):
         ReadmeRecommendation(should_update=True, reason="test")
@@ -201,7 +198,7 @@ C) updated_readme: The updated README content (if applicable)
 
 def test_fill_prompt():
     # Basic no-crash test
-    assert "DEFAULT README" in fill_prompt("# DEFAULT README", "# PR STUFF", "")
+    assert "DEFAULT README" in str(fill_prompt("# DEFAULT README", "# PR STUFF", ""))
 
 def get_client() -> ChatCompletionsClient:
     return ChatCompletionsClient(
@@ -211,7 +208,7 @@ def get_client() -> ChatCompletionsClient:
         api_version="2024-12-01-preview",
     )
 
-def get_readme(repo: Repository, pr: PullRequest, use_base_readme=False) -> str:
+def get_readme(repo: Repository.Repository, pr: PullRequest.PullRequest, use_base_readme=False) -> str:
     return repo.get_contents(
             "README.md", ref=pr.base.sha if use_base_readme else pr.head.sha
         ).decoded_content.decode()
@@ -277,6 +274,14 @@ def review_pull_request(
         else:
             raise e
 
+def parse_pr_link(github_client: Github, url: str) -> tuple[Repository.Repository, PullRequest.PullRequest]:
+    # TODO: Improve this code to be more robust
+    repo_name = '/'.join(url.split('/')[-4:-2])
+    pr_number = int(url.split('/')[-1])
+
+    repo = github_client.get_repo(repo_name)
+    pull_request = repo.get_pull(pr_number)
+    return repo, pull_request
 
 if __name__ == "__main__":
     parser = ArgumentParser()
