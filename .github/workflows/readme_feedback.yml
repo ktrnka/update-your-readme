@@ -51,7 +51,6 @@ jobs:
         id: update-readme
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          API_KEY: ${{ secrets.API_KEY }}
         run: |
           uv run python src/main.py --repository ${{ github.repository }} --pr ${{ steps.prs.outputs.original_num }} --readme README.md --feedback "${{ github.event.comment.body }}" --output-format github >> $GITHUB_OUTPUT
           cat $GITHUB_OUTPUT

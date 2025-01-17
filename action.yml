@@ -3,17 +3,10 @@ description: 'Automatically suggest updates to your README based on pull request
 author: 'Keith and Lara'
 
 inputs:
-  model-provider: 
-    description: 'Model provider to use. (anthropic or openai)'
-    required: true
-    default: 'anthropic'
-  api-key:
-    description: 'API Key for the specified model provider.'
-    required: true
   model:
-    description: 'Model to use.'
+    description: 'Github Model to use. See https://docs.github.com/en/github-models for more info'
     required: true
-    default: 'claude-3-5-sonnet-20240620'
+    default: 'gpt-4o-mini'
   readme-file:
     description: 'The path to the README file to update.'
     required: true
@@ -60,14 +53,6 @@ runs:
         echo "Repository path: ${{ github.workspace }}"
         echo "Action path": ${{ github.action_path }}
 
-    # Fail fast if the API key is empty
-    - name: Check API Key
-      if: ${{ inputs.api-key == '' }}
-      shell: bash
-      run: |
-        echo "Error: api-key is required."
-        exit 1
-
     - name: Install uv
       uses: astral-sh/setup-uv@v3
 
@@ -89,14 +74,12 @@ runs:
         --repository ${{ github.repository }} \
         --pr ${{ github.event.pull_request.number }} \
         --readme ${{ github.workspace }}/${{ inputs.readme-file }} \
-        --model-provider ${{ inputs.model-provider }} \
         --model ${{ inputs.model }} \
         --output-format github \
         >> $GITHUB_OUTPUT
         cat $GITHUB_OUTPUT
       env:
         GITHUB_TOKEN: ${{ github.token }}
-        API_KEY: ${{ inputs.api-key }}
     
     # Create a new PR with README changes
     - name: Create Pull Request
