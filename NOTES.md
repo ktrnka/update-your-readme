@@ -1,5 +1,8 @@
 # Github Models
 
+Dealbreaker:
+Currently, the GITHUB_TOKEN associated with the action run doesn't have permissions to Github Models and there's no way to add those permissions. You can use a personal access token but to do so, you need the user to create one and add it to their secrets.
+
 - To use structured output, you need to override the API version
 - To use o1, you need to override it to a newer one
 - gpt4o and gpt4o-mini work with structured output. No other models work with it that I've tried. They give back different errors
