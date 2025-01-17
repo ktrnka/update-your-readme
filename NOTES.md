@@ -30,3 +30,21 @@ https://github.com/marketplace/actions/create-pull-request
 - DVC: This is RST not MD so the code fails to find it in the first place.
 - sklearn: Same
 - Pandas: Counter({'no_update': 9, 'ValidationError': 1, 'should_update': 1}). The one suggested update looks a bit more extensive than I'd like.
+
+
+
+## FGithub errors
+# For o1-mini, it returns this error:
+# HttpResponseError: (unsupported_value) Unsupported value: 'messages[0].role' does not support 'system' with this model.
+# Code: unsupported_value
+# Message: Unsupported value: 'messages[0].role' does not support 'system' with this model.
+
+# o1 (first try):
+# HttpResponseError: (BadRequest) Model o1 is enabled only for api versions 2024-12-01-preview and later
+# Code: BadRequest
+# Message: Model o1 is enabled only for api versions 2024-12-01-preview and later
+
+# o1 (second try)
+# HttpResponseError: (unsupported_value) Unsupported value: 'messages[0].role' does not support 'system' with this model.
+# Code: unsupported_value
+# Message: Unsupported value: 'messages[0].role' does not support 'system' with this model.
