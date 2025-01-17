@@ -11,7 +11,8 @@ dependencies = [
     "langchain",
     "langchain-anthropic",
     "langchain-openai",
-    "pydantic"
+    "pydantic",
+    "azure-ai-inference"
 ]
 
 [dependency-groups]

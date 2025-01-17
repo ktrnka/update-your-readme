@@ -28,6 +28,8 @@ def pull_request_to_markdown(pr: PullRequest, excluded_diff_types={"ipynb"}) -> 
     for commit in pr.get_commits():
         text += f"- {commit.commit.message}\n"
 
+    print()
+
     for file in pr.get_files():
         patch = "Can't render patch."
         if file.patch and file.filename.split(".")[-1] not in excluded_diff_types:
