@@ -205,7 +205,7 @@ def get_client() -> ChatCompletionsClient:
         endpoint="https://models.inference.ai.azure.com",
         credential=AzureKeyCredential(os.environ["GITHUB_TOKEN"]),
         # Needed for structured output
-        api_version="2024-12-01-preview",
+        api_version="2024-10-01-preview",
     )
 
 def get_readme(repo: Repository.Repository, pr: PullRequest.PullRequest, use_base_readme=False) -> str:
