@@ -3,7 +3,7 @@ from github import Github, Auth, Repository, PullRequest
 import os
 from argparse import ArgumentParser
 from dotenv import load_dotenv
-from langchain_openai import ChatOpenAI
+from langchain_openai import AzureChatOpenAI, ChatOpenAI
 from pydantic import BaseModel, Field, ValidationError, model_validator
 from typing import Optional
 from langchain_anthropic import ChatAnthropic
@@ -230,6 +230,19 @@ def get_model(model_provider: str, model_name: str) -> BaseChatModel:
             )
     elif model_provider == "openai":
         return ChatOpenAI(model=model_name, api_key=os.environ["API_KEY"])
+    elif model_provider == "github":
+        os.environ["AZURE_OPENAI_ENDPOINT"] = "https://models.inference.ai.azure.com"
+        return AzureChatOpenAI(
+            # Looks like deployment and model are the same? https://learn.microsoft.com/en-us/azure/ai-studio/ai-services/how-to/quickstart-github-models?tabs=python
+            # azure_deployment=model_name,
+            model=model_name, 
+            api_version="2024-12-01-preview",
+            # Note: This must be a PAT not an action token
+            api_key=os.environ["GITHUB_TOKEN"],
+            temperature=0.2,
+            # max_tokens is output
+            max_tokens=4000
+            )
     else:
         raise ValueError(f"Unknown model provider: {model_provider}")
 
