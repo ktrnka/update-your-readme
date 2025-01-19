@@ -236,12 +236,18 @@ def get_model(model_provider: str, model_name: str) -> BaseChatModel:
         return ChatOpenAI(model=model_name, api_key=os.environ["API_KEY"])
     elif model_provider == "github":
         os.environ["AZURE_OPENAI_ENDPOINT"] = "https://models.inference.ai.azure.com"
+
+        SUPPORTED_GITHUB_MODELS = {"gpt-4o", "gpt-4o-mini"}
+        if model_name not in SUPPORTED_GITHUB_MODELS:
+            raise ValueError(f"{model_name} is not supported. If it's a non-OpenAI model, it's because we're using the AzureChatOpenAI wrapper which only supports the OpenAI models. If it's an o-series model, it's because the o-series doesn't support SystemMessage and I haven't implemented the fix yet. Supported models: {SUPPORTED_GITHUB_MODELS}")
+
         return AzureChatOpenAI(
             # Looks like deployment and model are the same? https://learn.microsoft.com/en-us/azure/ai-studio/ai-services/how-to/quickstart-github-models?tabs=python
             # azure_deployment=model_name,
             model=model_name, 
+            # This api_version supports structured output and o-series models
             api_version="2024-12-01-preview",
-            # Note: This must be a PAT not an action token
+            # Note: This must be a PAT not a Github Action token
             api_key=os.environ["API_KEY"],
             temperature=0.2,
             # max_tokens is output
@@ -267,12 +273,13 @@ def review_pull_request(
         readme_content = get_readme(repo, pr, use_base_readme)
         pr_content = pull_request_to_markdown(pr)
 
-        # In the Azure version of the pipeline, these errors were possible:
-        # azure.core.exceptions.ClientAuthenticationError: (unauthorized) Resource not accessible by integration
-        # Code: unauthorized
-        # ^ This one happened when using the github actions token, and was triggered at client.complete(...)
-        # from azure.core.exceptions import HttpResponseError, ServiceResponseError
-        # ^ These two were triggered when calling on a model that wasn't supported by structured output
+        # github provider:
+        # BadRequestError: This happens on an unknown model
+        # NotFoundError: This happened when trying Llama
+
+        # The o1 error:
+        # BadRequestError: Error code: 400 - {'error': {'message': "Unsupported value: 'messages[0].role' does not support 'system' with this model.", 'type': 'invalid_request_error', 'param': 'messages[0].role', 'code': 'unsupported_value'}}
+
         pipeline = fill_prompt(
             readme_content, pr_content, feedback
         ) | model.with_structured_output(ReadmeRecommendation)
@@ -324,7 +331,7 @@ def main():
         help="LLM provider to use",
     )
     parser.add_argument(
-        "--model", type=str, default="claude-3-5-sonnet-20240620", help="<odel to use"
+        "--model", type=str, default="claude-3-5-sonnet-20240620", help="Model to use"
     )
     parser.add_argument(
         "--output-format",
