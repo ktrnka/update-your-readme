@@ -241,7 +241,7 @@ def get_model(model_provider: str, model_name: str) -> BaseChatModel:
             model=model_name, 
             api_version="2024-12-01-preview",
             # Note: This must be a PAT not an action token
-            api_key=os.environ["GITHUB_TOKEN"],
+            api_key=os.environ["API_KEY"],
             temperature=0.2,
             # max_tokens is output
             max_tokens=4000
@@ -353,4 +353,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
