@@ -256,7 +256,7 @@ def get_readme(repo: Repository.Repository, pr: PullRequest.PullRequest, use_bas
         ).decoded_content.decode()
 
 def review_pull_request(
-    model: ChatAnthropic,
+    model: BaseChatModel,
     repo: Repository,
     pr: PullRequest,
     tries_remaining=1,
@@ -284,11 +284,12 @@ def review_pull_request(
 
         return result
     except openai.AuthenticationError as e:
-        if e.code == 401 and e.message == "Resource not accessible by integration":
-            # This is a common error when using the Github Actions token
+        if isinstance(model, AzureChatOpenAI):
             raise ValueError(
                 "Authentication error, make sure you're using a personal access token not a Github Actions token"
             ) from e
+        else:
+            raise e
     except ValidationError as e:
         if tries_remaining > 1:
             # BUG? If this happens, and we're piping stdout to a file to parse the output it may break Github's output parsing
