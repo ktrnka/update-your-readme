@@ -16,8 +16,8 @@ jobs:
       # The "uses" field doesn't support variables, so we can't use the branch name dynamically
       - uses: ktrnka/update-your-readme@main
         with:
-          model-provider: "openai"
-          model: gpt-4o-mini-2024-07-18
-          api-key: ${{ secrets.OPENAI_API_KEY }}
+          model-provider: "github"
+          model: gpt-4o
+          api-key: ${{ secrets.GH_PAT }}
           readme-file: README.md
           debug: "true"

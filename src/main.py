@@ -3,7 +3,8 @@ from github import Github, Auth, Repository, PullRequest
 import os
 from argparse import ArgumentParser
 from dotenv import load_dotenv
-from langchain_openai import ChatOpenAI
+from langchain_openai import AzureChatOpenAI, ChatOpenAI
+import openai
 from pydantic import BaseModel, Field, ValidationError, model_validator
 from typing import Optional
 from langchain_anthropic import ChatAnthropic
@@ -64,7 +65,6 @@ class ReadmeRecommendation(BaseModel):
     reason: str = Field(description="Reason for the recommendation")
     updated_readme: Optional[str] = Field(
         description="Updated README content, required if should_update is True, otherwise optional",
-        default=None,
     )
 
     @model_validator(mode="after")
@@ -93,7 +93,7 @@ def test_output_validation():
         ReadmeRecommendation(should_update=True)
 
     # test that it passes if should_update is False and the updated_readme is missing
-    ReadmeRecommendation(should_update=False, reason="test")
+    ReadmeRecommendation(should_update=False, reason="test", updated_readme=None)
 
     # test that it fails if should_update is True and the updated_readme is missing
     with pytest.raises(ValidationError):
@@ -202,6 +202,10 @@ C) updated_readme: The updated README content (if applicable)
         ]
     )
 
+def test_fill_prompt():
+    # Basic no-crash test
+    assert "DEFAULT README" in str(fill_prompt("# DEFAULT README", "# PR STUFF", ""))
+
 
 def get_model(model_provider: str, model_name: str) -> BaseChatModel:
     # model notes
@@ -230,12 +234,35 @@ def get_model(model_provider: str, model_name: str) -> BaseChatModel:
             )
     elif model_provider == "openai":
         return ChatOpenAI(model=model_name, api_key=os.environ["API_KEY"])
+    elif model_provider == "github":
+        os.environ["AZURE_OPENAI_ENDPOINT"] = "https://models.inference.ai.azure.com"
+
+        SUPPORTED_GITHUB_MODELS = {"gpt-4o", "gpt-4o-mini"}
+        if model_name not in SUPPORTED_GITHUB_MODELS:
+            raise ValueError(f"{model_name} is not supported. If it's a non-OpenAI model, it's because we're using the AzureChatOpenAI wrapper which only supports the OpenAI models. If it's an o-series model, it's because the o-series doesn't support SystemMessage and I haven't implemented the fix yet. Supported models: {SUPPORTED_GITHUB_MODELS}")
+
+        return AzureChatOpenAI(
+            # Looks like deployment and model are the same? https://learn.microsoft.com/en-us/azure/ai-studio/ai-services/how-to/quickstart-github-models?tabs=python
+            # azure_deployment=model_name,
+            model=model_name, 
+            # This api_version supports structured output and o-series models
+            api_version="2024-12-01-preview",
+            # Note: This must be a PAT not a Github Action token
+            api_key=os.environ["API_KEY"],
+            temperature=0.2,
+            # max_tokens is output
+            max_tokens=4000
+            )
     else:
         raise ValueError(f"Unknown model provider: {model_provider}")
 
+def get_readme(repo: Repository.Repository, pr: PullRequest.PullRequest, use_base_readme=False) -> str:
+    return repo.get_contents(
+            "README.md", ref=pr.base.sha if use_base_readme else pr.head.sha
+        ).decoded_content.decode()
 
 def review_pull_request(
-    model: ChatAnthropic,
+    model: BaseChatModel,
     repo: Repository,
     pr: PullRequest,
     tries_remaining=1,
@@ -243,16 +270,33 @@ def review_pull_request(
     use_base_readme=False,
 ) -> ReadmeRecommendation:
     try:
-        readme = repo.get_contents(
-            "README.md", ref=pr.base.sha if use_base_readme else pr.head.sha
-        ).decoded_content.decode()
+        readme_content = get_readme(repo, pr, use_base_readme)
+        pr_content = pull_request_to_markdown(pr)
+
+        # github provider:
+        # BadRequestError: This happens on an unknown model
+        # NotFoundError: This happened when trying Llama
+
+        # The o1 error:
+        # BadRequestError: Error code: 400 - {'error': {'message': "Unsupported value: 'messages[0].role' does not support 'system' with this model.", 'type': 'invalid_request_error', 'param': 'messages[0].role', 'code': 'unsupported_value'}}
 
         pipeline = fill_prompt(
-            readme, pull_request_to_markdown(pr), feedback
+            readme_content, pr_content, feedback
         ) | model.with_structured_output(ReadmeRecommendation)
         result = pipeline.invoke({})
 
+        # In the Azure API, if we hit the length limit it'd be in the finish_reason:
+        # if response.choices[0].finish_reason != CompletionsFinishReason.STOPPED:
+        # (where CompletionsFinishReason is from azure.ai.inference.models)
+
         return result
+    except openai.AuthenticationError as e:
+        if isinstance(model, AzureChatOpenAI):
+            raise ValueError(
+                "Authentication error, make sure you're using a personal access token not a Github Actions token"
+            ) from e
+        else:
+            raise e
     except ValidationError as e:
         if tries_remaining > 1:
             # BUG? If this happens, and we're piping stdout to a file to parse the output it may break Github's output parsing
@@ -261,8 +305,16 @@ def review_pull_request(
         else:
             raise e
 
+def parse_pr_link(github_client: Github, url: str) -> tuple[Repository.Repository, PullRequest.PullRequest]:
+    # TODO: Improve this code to be more robust
+    repo_name = '/'.join(url.split('/')[-4:-2])
+    pr_number = int(url.split('/')[-1])
 
-if __name__ == "__main__":
+    repo = github_client.get_repo(repo_name)
+    pull_request = repo.get_pull(pr_number)
+    return repo, pull_request
+
+def main():
     parser = ArgumentParser()
     parser.add_argument(
         "--repository", "-r", type=str, required=True, help="Repository name"
@@ -274,12 +326,12 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model-provider",
         type=str,
-        choices=["anthropic", "openai"],
+        choices=["anthropic", "openai", "github"],
         default="anthropic",
         help="LLM provider to use",
     )
     parser.add_argument(
-        "--model", type=str, default="claude-3-5-sonnet-20240620", help="<odel to use"
+        "--model", type=str, default="claude-3-5-sonnet-20240620", help="Model to use"
     )
     parser.add_argument(
         "--output-format",
@@ -313,3 +365,6 @@ if __name__ == "__main__":
         print(result.to_github_actions_outputs())
     else:
         print(result.model_dump_json())
+
+if __name__ == "__main__":
+    main()
