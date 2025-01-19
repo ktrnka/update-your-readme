@@ -6,7 +6,7 @@ This project automatically updates README files based on changes in pull request
 
 - Suggests README updates based on 1) the pull request description 2) the code changes in the PR 3) commit messages
 - Automatically closes stale README update PRs
-- Uses LangChain and Anthropic's Claude model or OpenAI's models for intelligent suggestions
+- Uses LangChain and Anthropic's Claude model, OpenAI's models, or GitHub models for intelligent suggestions
 - Option to skip README checks for testing purposes
 
 Currently only available for developers of this repo:
@@ -17,7 +17,7 @@ Currently only available for developers of this repo:
 ### Prerequisites:
 
 - GitHub repository
-- Anthropic API key or OpenAI API key
+- Anthropic API key, OpenAI API key, or GitHub Personal Access Token (PAT)
 
 To use this action in your GitHub workflow, add the following step to your `.github/workflows/your-workflow.yml` file, replacing the version as needed:
 
@@ -26,23 +26,26 @@ To use this action in your GitHub workflow, add the following step to your `.git
   with:
     model-provider: "openai"
     api-key: ${{ secrets.OPENAI_API_KEY }}
-    model: gpt-4o-mini-2024-07-18  # Specify your preferred OpenAI model
+    model: gpt-4o-mini-2024-07-18  # Specify your preferred model
     readme-file: README.md
     debug: "true"
 ```
 
 See `.github/workflows/suggest_readme_updates.yml` for an example.
 
-Make sure to set up the `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` secret in your repository settings. Note: The Action will not work on PRs from forks because these secrets aren't available on workflows for those PRs.
+Make sure to set and api key such as `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, or `GH_PAT` secret in your repository settings. Note: The Action will not work on PRs from forks because these secrets aren't available on workflows for those PRs.
 
 ### Model Configuration
 
-You can specify which model to use through the `model-provider` and `model` input parameters. This allows you to choose between Anthropic and OpenAI models:
+You can specify which model to use through the `model-provider` and `model` input parameters. This allows you to choose between Anthropic, OpenAI, and GitHub models:
 - For Anthropic:
   - `claude-3-5-sonnet-20240620` (default) - Recommended for quality
   - `claude-3-5-haiku-latest` - Faster and more cost-effective option.
 - For OpenAI:
   - `gpt-4o-mini-2024-07-18` - Example of an OpenAI model
+- For GitHub:
+  - `gpt-4o` - Example of a GitHub model
+  - `gpt-4o-mini` - Another GitHub model option
 
 In your repo settings, under Actions > General > Workflow Permissions be sure to check "Allow GitHub Actions to create and approve pull requests" and allow read/write from Github Actions:
 ![Workflow Permissions](workflow_permissions.png)
@@ -113,7 +116,7 @@ This project includes GitHub Actions workflows that enhance the README update pr
 3. **README Feedback**: Defined in `.github/workflows/readme_feedback.yml`, this workflow:
    - Handles feedback on README updates
 
-To use these features, ensure that your repository has the necessary secrets set up (`ANTHROPIC_API_KEY` or `OPENAI_API_KEY`) and pass them as parameters to the action.
+To use these features, ensure that your repository has the necessary secrets set up (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, or `GH_PAT`) and pass them as parameters to the action.
 
 ### Debugging
 
