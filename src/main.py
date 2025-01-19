@@ -64,7 +64,6 @@ class ReadmeRecommendation(BaseModel):
     reason: str = Field(description="Reason for the recommendation")
     updated_readme: Optional[str] = Field(
         description="Updated README content, required if should_update is True, otherwise optional",
-        default=None,
     )
 
     @model_validator(mode="after")
@@ -93,7 +92,7 @@ def test_output_validation():
         ReadmeRecommendation(should_update=True)
 
     # test that it passes if should_update is False and the updated_readme is missing
-    ReadmeRecommendation(should_update=False, reason="test")
+    ReadmeRecommendation(should_update=False, reason="test", updated_readme=None)
 
     # test that it fails if should_update is True and the updated_readme is missing
     with pytest.raises(ValidationError):
@@ -202,6 +201,10 @@ C) updated_readme: The updated README content (if applicable)
         ]
     )
 
+def test_fill_prompt():
+    # Basic no-crash test
+    assert "DEFAULT README" in str(fill_prompt("# DEFAULT README", "# PR STUFF", ""))
+
 
 def get_model(model_provider: str, model_name: str) -> BaseChatModel:
     # model notes
@@ -246,6 +249,10 @@ def get_model(model_provider: str, model_name: str) -> BaseChatModel:
     else:
         raise ValueError(f"Unknown model provider: {model_provider}")
 
+def get_readme(repo: Repository.Repository, pr: PullRequest.PullRequest, use_base_readme=False) -> str:
+    return repo.get_contents(
+            "README.md", ref=pr.base.sha if use_base_readme else pr.head.sha
+        ).decoded_content.decode()
 
 def review_pull_request(
     model: ChatAnthropic,
@@ -256,14 +263,23 @@ def review_pull_request(
     use_base_readme=False,
 ) -> ReadmeRecommendation:
     try:
-        readme = repo.get_contents(
-            "README.md", ref=pr.base.sha if use_base_readme else pr.head.sha
-        ).decoded_content.decode()
+        readme_content = get_readme(repo, pr, use_base_readme)
+        pr_content = pull_request_to_markdown(pr)
 
+        # In the Azure version of the pipeline, these errors were possible:
+        # azure.core.exceptions.ClientAuthenticationError: (unauthorized) Resource not accessible by integration
+        # Code: unauthorized
+        # ^ This one happened when using the github actions token, and was triggered at client.complete(...)
+        # from azure.core.exceptions import HttpResponseError, ServiceResponseError
+        # ^ These two were triggered when calling on a model that wasn't supported by structured output
         pipeline = fill_prompt(
-            readme, pull_request_to_markdown(pr), feedback
+            readme_content, pr_content, feedback
         ) | model.with_structured_output(ReadmeRecommendation)
         result = pipeline.invoke({})
+
+        # In the Azure API, if we hit the length limit it'd be in the finish_reason:
+        # if response.choices[0].finish_reason != CompletionsFinishReason.STOPPED:
+        # (where CompletionsFinishReason is from azure.ai.inference.models)
 
         return result
     except ValidationError as e:
@@ -274,8 +290,16 @@ def review_pull_request(
         else:
             raise e
 
+def parse_pr_link(github_client: Github, url: str) -> tuple[Repository.Repository, PullRequest.PullRequest]:
+    # TODO: Improve this code to be more robust
+    repo_name = '/'.join(url.split('/')[-4:-2])
+    pr_number = int(url.split('/')[-1])
 
-if __name__ == "__main__":
+    repo = github_client.get_repo(repo_name)
+    pull_request = repo.get_pull(pr_number)
+    return repo, pull_request
+
+def main():
     parser = ArgumentParser()
     parser.add_argument(
         "--repository", "-r", type=str, required=True, help="Repository name"
@@ -326,3 +350,7 @@ if __name__ == "__main__":
         print(result.to_github_actions_outputs())
     else:
         print(result.model_dump_json())
+
+if __name__ == "__main__":
+    main()
+    
