@@ -18,6 +18,6 @@ jobs:
         with:
           model-provider: "github"
           model: gpt-4o-mini
-          api-key: ${{ secrets.GITHUB_TOKEN }}
+          api-key: ${{ secrets.GH_PAT }}
           readme-file: README.md
           debug: "true"
