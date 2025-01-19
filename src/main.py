@@ -311,7 +311,7 @@ def main():
     parser.add_argument(
         "--model-provider",
         type=str,
-        choices=["anthropic", "openai"],
+        choices=["anthropic", "openai", "github"],
         default="anthropic",
         help="LLM provider to use",
     )

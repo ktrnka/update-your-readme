@@ -4,7 +4,7 @@ author: 'Keith and Lara'
 
 inputs:
   model-provider: 
-    description: 'Model provider to use. (anthropic or openai)'
+    description: 'Model provider to use. (anthropic, openai, or github)'
     required: true
     default: 'anthropic'
   api-key:
