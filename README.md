@@ -33,7 +33,7 @@ To use this action in your GitHub workflow, add the following step to your `.git
 
 See `.github/workflows/suggest_readme_updates.yml` for an example.
 
-Make sure to set up the `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, or `GH_PAT` secret in your repository settings. Note: The Action will not work on PRs from forks because these secrets aren't available on workflows for those PRs.
+Make sure to set and api key such as `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, or `GH_PAT` secret in your repository settings. Note: The Action will not work on PRs from forks because these secrets aren't available on workflows for those PRs.
 
 ### Model Configuration
 
