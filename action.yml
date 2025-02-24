@@ -73,10 +73,12 @@ runs:
 
     - name: Set up Python
       shell: bash
+      working-directory: ${{ github.action_path }}
       run: uv python install
 
     - name: Install dependencies
       shell: bash
+      working-directory: ${{ github.action_path }}
       run: make install
 
     # Run the core logic to update the README
