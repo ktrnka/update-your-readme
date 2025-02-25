@@ -14,7 +14,7 @@ jobs:
       # Note: This points to the latest version on main; users should pull a tagged version instead
       # When doing development on a branch, point to the branch
       # The "uses" field doesn't support variables, so we can't use the branch name dynamically
-      - uses: ktrnka/update-your-readme@custom_readme_path
+      - uses: ktrnka/update-your-readme@main
         with:
           model-provider: "github"
           model: gpt-4o
