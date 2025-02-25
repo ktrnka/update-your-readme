@@ -90,7 +90,8 @@ runs:
         uv run python src/main.py \
         --repository ${{ github.repository }} \
         --pr ${{ github.event.pull_request.number }} \
-        --readme ${{ github.workspace }}/${{ inputs.readme-file }} \
+        --readme-absolute ${{ github.workspace }}/${{ inputs.readme-file }} \
+        --readme-relative ${{ inputs.readme-file }} \
         --model-provider ${{ inputs.model-provider }} \
         --model ${{ inputs.model }} \
         --output-format github \
