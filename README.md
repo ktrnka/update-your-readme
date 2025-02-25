@@ -33,7 +33,7 @@ To use this action in your GitHub workflow, add the following step to your `.git
 
 See `.github/workflows/suggest_readme_updates.yml` for an example.
 
-Make sure to set and api key such as `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, or `GH_PAT` secret in your repository settings. Note: The Action will not work on PRs from forks because these secrets aren't available on workflows for those PRs.
+Make sure to set an API key such as `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, or `GH_PAT` secret in your repository settings. Note: The Action will not work on PRs from forks because these secrets aren't available on workflows for those PRs.
 
 ### Model Configuration
 
@@ -67,6 +67,26 @@ To set up the project, you need to install the 'uv' package for managing the Pyt
 ### Skipping README Check
 
 To skip the README check for testing purposes, include "NO README REVIEW" in the pull request body. This will cause the action to exit without performing any updates.
+
+### Handling README Paths
+
+The action now supports specifying both relative and absolute paths for the README file. Use the following input parameters in your workflow configuration:
+
+- `readme-relative`: The path to the README file relative to the repository root (required).
+- `readme-absolute`: The absolute path to the README file (required).
+
+Example:
+
+```yaml
+- uses: ktrnka/update-your-readme@VERSION
+  with:
+    model-provider: "openai"
+    api-key: ${{ secrets.OPENAI_API_KEY }}
+    model: gpt-4o-mini-2024-07-18
+    readme-relative: README.md
+    readme-absolute: ${{ github.workspace }}/README.md
+    debug: "true"
+```
 
 ## Development
 
