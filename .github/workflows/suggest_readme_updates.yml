@@ -19,5 +19,5 @@ jobs:
           model-provider: "github"
           model: gpt-4o
           api-key: ${{ secrets.GH_PAT }}
-          readme-file: docs/README.md
+          readme-file: README.md
           debug: "true"
