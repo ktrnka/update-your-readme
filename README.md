@@ -8,6 +8,7 @@ This project automatically updates README files based on changes in pull request
 - Automatically closes stale README update PRs
 - Uses LangChain and Anthropic's Claude model, OpenAI's models, or GitHub models for intelligent suggestions
 - Option to skip README checks for testing purposes
+- Supports specifying a custom path for the README file
 
 Currently only available for developers of this repo:
 - If you comment on a README PR, it will regenerate the README using your feedback
@@ -27,13 +28,13 @@ To use this action in your GitHub workflow, add the following step to your `.git
     model-provider: "openai"
     api-key: ${{ secrets.OPENAI_API_KEY }}
     model: gpt-4o-mini-2024-07-18  # Specify your preferred model
-    readme-file: README.md
+    readme-file: README.md  # Specify the path to your README file
     debug: "true"
 ```
 
 See `.github/workflows/suggest_readme_updates.yml` for an example.
 
-Make sure to set and api key such as `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, or `GH_PAT` secret in your repository settings. Note: The Action will not work on PRs from forks because these secrets aren't available on workflows for those PRs.
+Make sure to set an API key such as `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, or `GH_PAT` secret in your repository settings. Note: The Action will not work on PRs from forks because these secrets aren't available on workflows for those PRs.
 
 ### Model Configuration
 
