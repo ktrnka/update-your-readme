@@ -256,21 +256,22 @@ def get_model(model_provider: str, model_name: str) -> BaseChatModel:
     else:
         raise ValueError(f"Unknown model provider: {model_provider}")
 
-def get_readme(repo: Repository.Repository, pr: PullRequest.PullRequest, use_base_readme=False) -> str:
+def get_readme(repo: Repository.Repository, pr: PullRequest.PullRequest, readme_path: str, use_base_readme=False) -> str:
     return repo.get_contents(
-            "README.md", ref=pr.base.sha if use_base_readme else pr.head.sha
+            readme_path, ref=pr.base.sha if use_base_readme else pr.head.sha
         ).decoded_content.decode()
 
 def review_pull_request(
     model: BaseChatModel,
     repo: Repository,
     pr: PullRequest,
+    readme_path: str,
     tries_remaining=1,
     feedback: str = None,
     use_base_readme=False,
 ) -> ReadmeRecommendation:
     try:
-        readme_content = get_readme(repo, pr, use_base_readme)
+        readme_content = get_readme(repo, pr, readme_path, use_base_readme)
         pr_content = pull_request_to_markdown(pr)
 
         # github provider:
@@ -301,7 +302,7 @@ def review_pull_request(
         if tries_remaining > 1:
             # BUG? If this happens, and we're piping stdout to a file to parse the output it may break Github's output parsing
             print("Validation error, trying again")
-            return review_pull_request(repo, pr, tries_remaining - 1)
+            return review_pull_request(model, repo, pr, readme_path, tries_remaining - 1, feedback=feedback, use_base_readme=use_base_readme)
         else:
             raise e
 
@@ -354,7 +355,7 @@ def main():
         )
     else:
         model = get_model(args.model_provider, args.model)
-        result = review_pull_request(model, repo, pr, feedback=args.feedback)
+        result = review_pull_request(model, repo, pr, args.readme, feedback=args.feedback)
 
         if result.should_update and result.updated_readme:
             with open(args.readme, "w") as f:
