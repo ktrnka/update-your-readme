@@ -256,22 +256,25 @@ def get_model(model_provider: str, model_name: str) -> BaseChatModel:
     else:
         raise ValueError(f"Unknown model provider: {model_provider}")
 
-def get_readme(repo: Repository.Repository, pr: PullRequest.PullRequest, readme_path: str, use_base_readme=False) -> str:
+def get_readme(repo: Repository.Repository, pr: PullRequest.PullRequest, relative_readme_path: str, use_base_readme=False) -> str:
+    """
+    relative_readme_path: The path to the README file relative to the repository root
+    """
     return repo.get_contents(
-            readme_path, ref=pr.base.sha if use_base_readme else pr.head.sha
+            relative_readme_path, ref=pr.base.sha if use_base_readme else pr.head.sha
         ).decoded_content.decode()
 
 def review_pull_request(
     model: BaseChatModel,
     repo: Repository,
     pr: PullRequest,
-    readme_path: str,
+    relative_readme_path: str,
     tries_remaining=1,
     feedback: str = None,
     use_base_readme=False,
 ) -> ReadmeRecommendation:
     try:
-        readme_content = get_readme(repo, pr, readme_path, use_base_readme)
+        readme_content = get_readme(repo, pr, relative_readme_path, use_base_readme)
         pr_content = pull_request_to_markdown(pr)
 
         # github provider:
@@ -302,7 +305,7 @@ def review_pull_request(
         if tries_remaining > 1:
             # BUG? If this happens, and we're piping stdout to a file to parse the output it may break Github's output parsing
             print("Validation error, trying again")
-            return review_pull_request(model, repo, pr, readme_path, tries_remaining - 1, feedback=feedback, use_base_readme=use_base_readme)
+            return review_pull_request(model, repo, pr, relative_readme_path, tries_remaining - 1, feedback=feedback, use_base_readme=use_base_readme)
         else:
             raise e
 
@@ -320,7 +323,8 @@ def main():
     parser.add_argument(
         "--repository", "-r", type=str, required=True, help="Repository name"
     )
-    parser.add_argument("--readme", type=str, required=True, help="README file")
+    parser.add_argument("--readme-relative", type=str, required=True, help="README file")
+    parser.add_argument("--readme-absolute", type=str, required=True, help="README file")
     parser.add_argument("--pr", type=int, required=True, help="Pull request number")
     parser.add_argument("--feedback", type=str, help="User feedback for LLM")
 
@@ -355,10 +359,10 @@ def main():
         )
     else:
         model = get_model(args.model_provider, args.model)
-        result = review_pull_request(model, repo, pr, args.readme, feedback=args.feedback)
+        result = review_pull_request(model, repo, pr, args.readme_relative, feedback=args.feedback)
 
         if result.should_update and result.updated_readme:
-            with open(args.readme, "w") as f:
+            with open(args.readme_absolute, "w") as f:
                 f.write(result.updated_readme)
 
     if args.output_format == "github":
