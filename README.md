@@ -39,7 +39,7 @@ Make sure to set an API key such as `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, or us
 
 You can specify which model to use through the `model-provider` and `model` input parameters. This allows you to choose between GitHub, Anthropic, and OpenAI models:
 - For GitHub:
-  - `gpt-4.1` - Recommended model, if your readme is well under 4000 tokens. See [Rate limits](https://docs.github.com/en/github-models/use-github-models/prototyping-with-ai-models#rate-limits) for details.
+  - `gpt-4.1` - Recommended model, if your README is well under 4000 tokens. See [Rate limits](https://docs.github.com/en/github-models/use-github-models/prototyping-with-ai-models#rate-limits) for details.
   - `gpt-4.1-mini` - Supported GitHub model
   - `gpt-4.1-nano` - Supported GitHub model
   - `gpt-4o` - Example of a GitHub model
